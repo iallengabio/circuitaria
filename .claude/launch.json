@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "ui", "runtimeExecutable": "pnpm", "runtimeArgs": ["--filter", "ui", "dev"], "port": 5183 }
+  ]
+}

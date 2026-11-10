@@ -10,17 +10,19 @@ pub type Pin<'a> = (Id, &'a str);
 pub struct MB {
     pub m: Module,
     next: Id,
+    /// When set, new components are stacked in a column from this point.
+    flow: Option<(i32, i32)>,
 }
 
 impl MB {
     pub fn new(name: &str) -> Self {
-        MB { m: Module { name: name.into(), ..Default::default() }, next: 1 }
+        MB { m: Module { name: name.into(), ..Default::default() }, next: 1, flow: None }
     }
 
     /// Continue building on top of an existing module (e.g. a challenge board).
     pub fn from_module(m: Module) -> Self {
         let next = m.components.iter().map(|c| c.id).chain(m.wires.iter().map(|w| w.id)).max().unwrap_or(0) + 1;
-        MB { m, next }
+        MB { m, next, flow: None }
     }
 
     fn id(&mut self) -> Id {
@@ -34,8 +36,19 @@ impl MB {
             Value::Object(o) => o.into_iter().collect(),
             _ => Params::new(),
         };
-        self.m.components.push(Component { id, kind: kind.into(), x: 0, y: 0, rot: 0, params });
+        let (mut x, mut y) = (0, 0);
+        if let Some((fx, fy)) = self.flow {
+            (x, y) = (fx, fy);
+            let rows = catalog::pins(kind, &params).map(|p| p.iter().filter(|d| d.dir == catalog::Dir::In).count().max(p.iter().filter(|d| d.dir == catalog::Dir::Out).count())).unwrap_or(3);
+            self.flow = Some((fx, fy + (rows as i32 * 20).max(40) + 20));
+        }
+        self.m.components.push(Component { id, kind: kind.into(), x, y, rot: 0, params });
         id
+    }
+
+    /// Starts a manual column: following components stack downwards from (x, y).
+    pub fn col(&mut self, x: i32, y: i32) {
+        self.flow = Some((x, y));
     }
 
     pub fn wire(&mut self, a: Pin, b: Pin) {

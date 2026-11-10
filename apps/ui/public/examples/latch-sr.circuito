@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "name": "Latch SR",
+  "main": "main",
+  "modules": {
+    "main": {
+      "name": "main",
+      "color": "",
+      "icon": "",
+      "revision": 0,
+      "components": [
+        {
+          "id": 1,
+          "kind": "switch",
+          "x": 60,
+          "y": 40,
+          "rot": 0,
+          "params": {
+            "on": true
+          }
+        },
+        {
+          "id": 2,
+          "kind": "switch",
+          "x": 60,
+          "y": 110,
+          "rot": 0,
+          "params": {
+            "on": true
+          }
+        },
+        {
+          "id": 3,
+          "kind": "nand",
+          "x": 210,
+          "y": 40,
+          "rot": 0
+        },
+        {
+          "id": 4,
+          "kind": "nand",
+          "x": 360,
+          "y": 40,
+          "rot": 0
+        },
+        {
+          "id": 5,
+          "kind": "led",
+          "x": 510,
+          "y": 40,
+          "rot": 0,
+          "params": {
+            "color": "green"
+          }
+        },
+        {
+          "id": 6,
+          "kind": "led",
+          "x": 510,
+          "y": 110,
+          "rot": 0,
+          "params": {
+            "color": "red"
+          }
+        },
+        {
+          "id": 13,
+          "kind": "text",
+          "x": 60,
+          "y": 200,
+          "rot": 0,
+          "params": {
+            "text": "S e R são ativos em 0: desligue S para gravar 1, desligue R para gravar 0."
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": 7,
+          "a": {
+            "c": 1,
+            "p": "y"
+          },
+          "b": {
+            "c": 3,
+            "p": "i0"
+          }
+        },
+        {
+          "id": 8,
+          "a": {
+            "c": 4,
+            "p": "y"
+          },
+          "b": {
+            "c": 3,
+            "p": "i1"
+          }
+        },
+        {
+          "id": 9,
+          "a": {
+            "c": 3,
+            "p": "y"
+          },
+          "b": {
+            "c": 4,
+            "p": "i0"
+          }
+        },
+        {
+          "id": 10,
+          "a": {
+            "c": 2,
+            "p": "y"
+          },
+          "b": {
+            "c": 4,
+            "p": "i1"
+          }
+        },
+        {
+          "id": 11,
+          "a": {
+            "c": 3,
+            "p": "y"
+          },
+          "b": {
+            "c": 5,
+            "p": "a"
+          }
+        },
+        {
+          "id": 12,
+          "a": {
+            "c": 4,
+            "p": "y"
+          },
+          "b": {
+            "c": 6,
+            "p": "a"
+          }
+        }
+      ]
+    }
+  },
+  "nextId": 1000000
+}

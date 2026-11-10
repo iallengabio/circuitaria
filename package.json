@@ -1,0 +1,15 @@
+{
+  "name": "circuitaria",
+  "private": true,
+  "packageManager": "pnpm@12.6.0",
+  "scripts": {
+    "wasm": "cargo build --release --target wasm32-unknown-unknown -p circ-wasm && cp target/wasm32-unknown-unknown/release/circ_wasm.wasm apps/ui/public/circ.wasm",
+    "examples": "cargo run --release -p circ-cli -- examples content/examples && rm -rf apps/ui/public/examples && cp -R content/examples apps/ui/public/examples",
+    "dev": "pnpm wasm && pnpm examples && pnpm --filter ui dev",
+    "build": "pnpm wasm && pnpm examples && pnpm --filter ui build",
+    "lint": "pnpm --filter ui check",
+    "test": "pnpm --filter ui test",
+    "desktop": "pnpm build && pnpm --filter desktop tauri dev",
+    "desktop:build": "pnpm build && pnpm --filter desktop tauri build"
+  }
+}

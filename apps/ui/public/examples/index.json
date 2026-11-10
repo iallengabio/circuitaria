@@ -1,0 +1,44 @@
+[
+  {
+    "id": "latch-sr",
+    "title": {
+      "en": "SR latch from NANDs",
+      "pt": "Latch SR com NANDs"
+    }
+  },
+  {
+    "id": "contador-ripple",
+    "title": {
+      "en": "4-bit ripple counter",
+      "pt": "Contador ripple de 4 bits"
+    }
+  },
+  {
+    "id": "somador-8-bits",
+    "title": {
+      "en": "8-bit adder (nested ICs)",
+      "pt": "Somador de 8 bits (CIs aninhados)"
+    }
+  },
+  {
+    "id": "serializador",
+    "title": {
+      "en": "Serializer / deserializer",
+      "pt": "Serializador / deserializador"
+    }
+  },
+  {
+    "id": "tela-de-pixels",
+    "title": {
+      "en": "Drawing on the pixel display",
+      "pt": "Desenhando na tela de pixels"
+    }
+  },
+  {
+    "id": "cpu-8-bits",
+    "title": {
+      "en": "8-bit CPU (SAP-1 style)",
+      "pt": "CPU de 8 bits (estilo SAP-1)"
+    }
+  }
+]

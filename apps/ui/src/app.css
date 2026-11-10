@@ -1,0 +1,32 @@
+/* Design tokens. Canvas colours live in lib/theme.ts — keep both in sync. */
+:root {
+  --bg: #11142a; --panel: #191d3a; --panel2: #222750; --line: #2c3263; --text: #e8ecff; --dim: #8b94c4;
+  --accent: #9d8cff; --accent-ink: #14112b; --ok: #3ddc97; --warn: #ffb443; --bad: #ff5470;
+  --radius: 12px; --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --font: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+}
+:root[data-theme='light'] {
+  --bg: #f4f5fb; --panel: #ffffff; --panel2: #eef0fa; --line: #dde1f0; --text: #2b3152; --dim: #7a83a8;
+  --accent: #6c5ce7; --accent-ink: #ffffff; --ok: #12b76a; --warn: #d98a00; --bad: #e5345b;
+  --shadow: 0 8px 30px rgba(40, 50, 100, 0.14);
+}
+* { box-sizing: border-box; }
+html, body, #app { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--text); font: 14px/1.4 var(--font); overflow: hidden; -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; border: 0; background: none; padding: 0; }
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 10px; background: var(--panel2); font-weight: 600; white-space: nowrap; transition: transform 0.12s, background 0.12s; }
+.btn:hover:not(:disabled) { background: var(--line); }
+.btn:active:not(:disabled) { transform: scale(0.96); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover:not(:disabled) { filter: brightness(1.08); background: var(--accent); }
+.btn.icon { width: 32px; padding: 0; justify-content: center; }
+.field { width: 100%; height: 30px; padding: 0 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); }
+textarea.field { height: 90px; padding: 6px 8px; font-family: var(--mono); font-size: 12px; resize: vertical; }
+.field:focus-visible, .btn:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.muted { color: var(--dim); }
+.scroll { overflow: auto; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+h1, h2, h3, p { margin: 0; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

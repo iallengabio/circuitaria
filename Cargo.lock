@@ -94,6 +94,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "circ-wasm"
+version = "0.1.0"
+dependencies = [
+ "circ-challenges",
+ "circ-compile",
+ "circ-engine",
+ "circ-examples",
+ "circ-model",
+ "serde_json",
+]
+
+[[package]]
 name = "circ-world"
 version = "0.1.0"
 dependencies = [

@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "name": "Serializador",
+  "main": "main",
+  "modules": {
+    "main": {
+      "name": "main",
+      "color": "",
+      "icon": "",
+      "revision": 0,
+      "components": [
+        {
+          "id": 1,
+          "kind": "clock",
+          "x": 60,
+          "y": 40,
+          "rot": 0,
+          "params": {
+            "half": 4
+          }
+        },
+        {
+          "id": 2,
+          "kind": "number_in",
+          "x": 60,
+          "y": 110,
+          "rot": 0,
+          "params": {
+            "value": 165,
+            "width": 8
+          }
+        },
+        {
+          "id": 3,
+          "kind": "button",
+          "x": 60,
+          "y": 180,
+          "rot": 0
+        },
+        {
+          "id": 4,
+          "kind": "shiftreg",
+          "x": 210,
+          "y": 40,
+          "rot": 0,
+          "params": {
+            "width": 8
+          }
+        },
+        {
+          "id": 5,
+          "kind": "shiftreg",
+          "x": 360,
+          "y": 40,
+          "rot": 0,
+          "params": {
+            "width": 8
+          }
+        },
+        {
+          "id": 6,
+          "kind": "led",
+          "x": 510,
+          "y": 40,
+          "rot": 0,
+          "params": {
+            "color": "yellow"
+          }
+        },
+        {
+          "id": 7,
+          "kind": "number_out",
+          "x": 510,
+          "y": 110,
+          "rot": 0,
+          "params": {
+            "base": "hex",
+            "width": 8
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": 8,
+          "a": {
+            "c": 1,
+            "p": "y"
+          },
+          "b": {
+            "c": 4,
+            "p": "clk"
+          }
+        },
+        {
+          "id": 9,
+          "a": {
+            "c": 1,
+            "p": "y"
+          },
+          "b": {
+            "c": 5,
+            "p": "clk"
+          }
+        },
+        {
+          "id": 10,
+          "a": {
+            "c": 2,
+            "p": "y"
+          },
+          "b": {
+            "c": 4,
+            "p": "d"
+          }
+        },
+        {
+          "id": 11,
+          "a": {
+            "c": 3,
+            "p": "y"
+          },
+          "b": {
+            "c": 4,
+            "p": "load"
+          }
+        },
+        {
+          "id": 12,
+          "a": {
+            "c": 4,
+            "p": "sout"
+          },
+          "b": {
+            "c": 5,
+            "p": "sin"
+          }
+        },
+        {
+          "id": 13,
+          "a": {
+            "c": 4,
+            "p": "sout"
+          },
+          "b": {
+            "c": 6,
+            "p": "a"
+          }
+        },
+        {
+          "id": 14,
+          "a": {
+            "c": 5,
+            "p": "q"
+          },
+          "b": {
+            "c": 7,
+            "p": "a"
+          }
+        }
+      ]
+    }
+  },
+  "nextId": 1000000
+}

@@ -239,8 +239,11 @@ pub fn cpu_program() -> Vec<u64> {
 /// (project, output register display id, halt led id).
 pub fn cpu8() -> (Project, Id, Id) {
     let mut b = MB::new("main");
+    b.col(60, 60);
     let clk = b.add("clock", json!({"half": 1}));
+    b.col(540, 20);
     let bus = b.add("junction", json!({}));
+    b.col(60, 140);
     let rom = b.add("rom", json!({"addrBits": 9, "width": 16, "data": microcode()}));
     let ctl = b.add("splitter", json!({"width": 16}));
     b.wire((rom, "d"), (ctl, "a"));
@@ -262,6 +265,7 @@ pub fn cpu8() -> (Project, Id, Id) {
         b.wire((ctl, &c(en)), (r, "en"));
         r
     };
+    b.col(600, 60);
     let low = b.add("slice", json!({"width": 8, "lo": 0, "out": 4}));
     b.wire((bus, "p"), (low, "a"));
     let widen = |b: &mut MB, src: (Id, &str)| -> Id {
@@ -270,6 +274,7 @@ pub fn cpu8() -> (Project, Id, Id) {
         s
     };
 
+    b.col(760, 60);
     // Program counter (JMP loads it from the bus).
     let pc = b.add("counter", json!({"width": 4}));
     let pc_en = b.gate("or", &[(ctl, &c(CE)), (ctl, &c(J))]);
@@ -280,6 +285,7 @@ pub fn cpu8() -> (Project, Id, Id) {
     let pc8 = widen(&mut b, (pc, "q"));
     drive(&mut b, (pc8, "y"), CO);
 
+    b.col(960, 60);
     // Memory.
     let mar = reg(&mut b, 4, (low, "y"), MI);
     let ram = b.add("ram", json!({"addrBits": 4, "width": 8, "data": cpu_program()}));
@@ -289,6 +295,7 @@ pub fn cpu8() -> (Project, Id, Id) {
     b.wire(cclk, (ram, "clk"));
     drive(&mut b, (ram, "dout"), RO);
 
+    b.col(1160, 60);
     // Instruction register: high nibble = opcode, low nibble = operand.
     let ir = reg(&mut b, 8, (bus, "p"), II);
     let (opc, arg) = (b.add("slice", json!({"width": 8, "lo": 4, "out": 4})), b.add("slice", json!({"width": 8, "lo": 0, "out": 4})));
@@ -297,9 +304,11 @@ pub fn cpu8() -> (Project, Id, Id) {
     let arg8 = widen(&mut b, (arg, "y"));
     drive(&mut b, (arg8, "y"), IO);
 
+    b.col(760, 380);
     // Accumulator, B and the adder/subtractor.
     let a = reg(&mut b, 8, (bus, "p"), AI);
     drive(&mut b, (a, "q"), AO);
+    b.col(960, 380);
     let breg = reg(&mut b, 8, (bus, "p"), BI);
     let nb = b.gate_w("not", 8, &[(breg, "q")]);
     let bsel = b.add("mux", json!({"width": 8, "sel": 1}));
@@ -311,6 +320,7 @@ pub fn cpu8() -> (Project, Id, Id) {
     b.wire((bsel, "y"), (alu, "b"));
     b.wire((ctl, &c(SU)), (alu, "cin"));
     drive(&mut b, (alu, "s"), EO);
+    b.col(1160, 440);
     let zero = b.add("const", json!({"width": 8, "value": 0}));
     let isz = b.add("cmp", json!({"width": 8}));
     b.wire((alu, "s"), (isz, "a"));
@@ -322,6 +332,7 @@ pub fn cpu8() -> (Project, Id, Id) {
     let fl = b.add("splitter", json!({"width": 2}));
     b.wire((flags, "q"), (fl, "a"));
 
+    b.col(1360, 60);
     // Output register and display.
     let out = reg(&mut b, 8, (bus, "p"), OI);
     let disp = b.add("number_out", json!({"width": 8}));
@@ -329,6 +340,7 @@ pub fn cpu8() -> (Project, Id, Id) {
     let halt = b.add("led", json!({"color": "red"}));
     b.wire((ctl, &c(HLT)), (halt, "a"));
 
+    b.col(300, 60);
     // Control: step counter + microcode address.
     let step = b.add("counter", json!({"width": 3, "mod": 5}));
     b.wire(cclk, (step, "clk"));
