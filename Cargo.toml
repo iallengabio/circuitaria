@@ -1,0 +1,28 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+exclude = ["apps/desktop/src-tauri"]
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+publish = false
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+circ-model = { path = "crates/circ-model" }
+circ-compile = { path = "crates/circ-compile" }
+circ-engine = { path = "crates/circ-engine" }
+circ-world = { path = "crates/circ-world" }
+circ-challenges = { path = "crates/circ-challenges" }
+circ-examples = { path = "crates/circ-examples" }
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+
+[profile.test]
+opt-level = 1

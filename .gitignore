@@ -1,0 +1,6 @@
+target/
+node_modules/
+dist/
+.DS_Store
+apps/ui/public/circ.wasm
+apps/desktop/src-tauri/gen/

@@ -1,0 +1,13 @@
+[package]
+name = "circ-cli"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde_json.workspace = true
+circ-model.workspace = true
+circ-compile.workspace = true
+circ-engine.workspace = true
+circ-examples.workspace = true
+circ-challenges.workspace = true
