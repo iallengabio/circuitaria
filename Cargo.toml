@@ -26,3 +26,11 @@ panic = "abort"
 
 [profile.test]
 opt-level = 1
+
+[workspace.lints.clippy]
+needless_range_loop = "allow"
+too_many_arguments = "allow"
+should_implement_trait = "allow"
+manual_is_multiple_of = "allow"
+bool_assert_comparison = "allow"
+type_complexity = "allow"

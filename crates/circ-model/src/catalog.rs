@@ -30,16 +30,32 @@ pub struct PinDesc {
 }
 
 fn i(name: &str, width: u8) -> PinDesc {
-    PinDesc { name: name.into(), dir: Dir::In, width, default: None, clock: false, label: String::new() }
+    PinDesc {
+        name: name.into(),
+        dir: Dir::In,
+        width,
+        default: None,
+        clock: false,
+        label: String::new(),
+    }
 }
 fn id(name: &str, width: u8, d: u8) -> PinDesc {
-    PinDesc { default: Some(d), ..i(name, width) }
+    PinDesc {
+        default: Some(d),
+        ..i(name, width)
+    }
 }
 fn ck(name: &str) -> PinDesc {
-    PinDesc { clock: true, ..i(name, 1) }
+    PinDesc {
+        clock: true,
+        ..i(name, 1)
+    }
 }
 fn o(name: &str, width: u8) -> PinDesc {
-    PinDesc { dir: Dir::Out, ..i(name, width) }
+    PinDesc {
+        dir: Dir::Out,
+        ..i(name, width)
+    }
 }
 
 pub fn pu(p: &Params, key: &str, def: u64) -> u64 {
@@ -80,7 +96,11 @@ pub fn width(p: &Params) -> u8 {
 /// Piece widths of a splitter/merger, LSB first. `parts: "3,4,1"` or all 1-bit.
 pub fn parts(p: &Params) -> Vec<u8> {
     let s = ps(p, "parts", "");
-    let v: Vec<u8> = s.split(',').filter_map(|t| t.trim().parse::<u8>().ok()).filter(|w| *w >= 1).collect();
+    let v: Vec<u8> = s
+        .split(',')
+        .filter_map(|t| t.trim().parse::<u8>().ok())
+        .filter(|w| *w >= 1)
+        .collect();
     let total: u32 = v.iter().map(|w| *w as u32).sum();
     if !v.is_empty() && total <= 64 && v.len() <= 32 {
         v
@@ -106,7 +126,10 @@ pub fn mem_data(p: &Params) -> Vec<u64> {
 /// Returns None for unknown kinds and for `ic` (see [`module_pins`]).
 pub fn pins(kind: &str, p: &Params) -> Option<Vec<PinDesc>> {
     let w = width(p);
-    let passive = |n: &str| PinDesc { dir: Dir::Passive, ..i(n, 0) };
+    let passive = |n: &str| PinDesc {
+        dir: Dir::Passive,
+        ..i(n, 0)
+    };
     Some(match kind {
         "buf" | "not" => vec![i("a", w), o("y", w)],
         "and" | "nand" | "or" | "nor" | "xor" | "xnor" => {
@@ -145,35 +168,100 @@ pub fn pins(kind: &str, p: &Params) -> Option<Vec<PinDesc>> {
         }
         "merger" => {
             let ps = parts(p);
-            let mut v: Vec<_> = ps.iter().enumerate().map(|(k, w)| i(&format!("b{k}"), *w)).collect();
+            let mut v: Vec<_> = ps
+                .iter()
+                .enumerate()
+                .map(|(k, w)| i(&format!("b{k}"), *w))
+                .collect();
             v.push(o("y", ps.iter().sum()));
             v
         }
         "slice" => vec![i("a", w), o("y", pu(p, "out", 1).clamp(1, 64) as u8)],
-        "adder" => vec![i("a", w), i("b", w), id("cin", 1, 0), o("s", w), o("cout", 1)],
+        "adder" => vec![
+            i("a", w),
+            i("b", w),
+            id("cin", 1, 0),
+            o("s", w),
+            o("cout", 1),
+        ],
         "cmp" => vec![i("a", w), i("b", w), o("eq", 1), o("gt", 1), o("lt", 1)],
         "latch_sr" => vec![i("s", 1), i("r", 1), o("q", 1), o("nq", 1)],
         "latch_d" => vec![i("d", 1), i("en", 1), o("q", 1), o("nq", 1)],
         "dff" => vec![i("d", 1), ck("clk"), id("rst", 1, 0), o("q", 1), o("nq", 1)],
-        "tff" => vec![id("t", 1, 1), ck("clk"), id("rst", 1, 0), o("q", 1), o("nq", 1)],
-        "jkff" => vec![i("j", 1), i("k", 1), ck("clk"), id("rst", 1, 0), o("q", 1), o("nq", 1)],
-        "register" => vec![i("d", w), ck("clk"), id("en", 1, 1), id("clr", 1, 0), o("q", w)],
-        "counter" => vec![ck("clk"), id("en", 1, 1), id("clr", 1, 0), id("load", 1, 0), id("d", w, 0), id("up", 1, 1), o("q", w), o("co", 1)],
-        "shiftreg" => vec![id("sin", 1, 0), ck("clk"), id("en", 1, 1), id("clr", 1, 0), id("load", 1, 0), id("d", w, 0), o("q", w), o("sout", 1)],
-        "rom" => vec![i("addr", pu(p, "addrBits", 4).clamp(1, 16) as u8), o("d", w)],
-        "ram" => vec![i("addr", pu(p, "addrBits", 4).clamp(1, 16) as u8), i("din", w), id("we", 1, 0), ck("clk"), o("dout", w)],
+        "tff" => vec![
+            id("t", 1, 1),
+            ck("clk"),
+            id("rst", 1, 0),
+            o("q", 1),
+            o("nq", 1),
+        ],
+        "jkff" => vec![
+            i("j", 1),
+            i("k", 1),
+            ck("clk"),
+            id("rst", 1, 0),
+            o("q", 1),
+            o("nq", 1),
+        ],
+        "register" => vec![
+            i("d", w),
+            ck("clk"),
+            id("en", 1, 1),
+            id("clr", 1, 0),
+            o("q", w),
+        ],
+        "counter" => vec![
+            ck("clk"),
+            id("en", 1, 1),
+            id("clr", 1, 0),
+            id("load", 1, 0),
+            id("d", w, 0),
+            id("up", 1, 1),
+            o("q", w),
+            o("co", 1),
+        ],
+        "shiftreg" => vec![
+            id("sin", 1, 0),
+            ck("clk"),
+            id("en", 1, 1),
+            id("clr", 1, 0),
+            id("load", 1, 0),
+            id("d", w, 0),
+            o("q", w),
+            o("sout", 1),
+        ],
+        "rom" => vec![
+            i("addr", pu(p, "addrBits", 4).clamp(1, 16) as u8),
+            o("d", w),
+        ],
+        "ram" => vec![
+            i("addr", pu(p, "addrBits", 4).clamp(1, 16) as u8),
+            i("din", w),
+            id("we", 1, 0),
+            ck("clk"),
+            o("dout", w),
+        ],
         "switch" | "button" | "clock" => vec![o("y", 1)],
         "number_in" | "pin_in" | "port_in" => vec![o("y", w)],
         "led" | "buzzer" => vec![i("a", 1)],
         "seg7" => {
             if pb(p, "raw", false) {
-                ["a", "b", "c", "d", "e", "f", "g"].iter().map(|n| i(n, 1)).collect()
+                ["a", "b", "c", "d", "e", "f", "g"]
+                    .iter()
+                    .map(|n| i(n, 1))
+                    .collect()
             } else {
                 vec![i("d", 4)]
             }
         }
         "number_out" | "pin_out" | "port_out" => vec![i("a", w)],
-        "pixels" => vec![i("x", 5), i("y", 5), id("c", 4, 15), id("we", 1, 1), ck("clk")],
+        "pixels" => vec![
+            i("x", 5),
+            i("y", 5),
+            id("c", 4, 15),
+            id("we", 1, 1),
+            ck("clk"),
+        ],
         "terminal" => vec![i("d", 8), ck("clk"), id("en", 1, 1)],
         "text" => vec![],
         _ => return None,
@@ -183,8 +271,12 @@ pub fn pins(kind: &str, p: &Params) -> Option<Vec<PinDesc>> {
 /// Interface pins of a user IC, derived from its `pin_in` / `pin_out`
 /// components, ordered top-to-bottom. Pin name is `p<inner id>` (stable).
 pub fn module_pins(m: &Module) -> Vec<PinDesc> {
-    let mut v: Vec<(&crate::Component, bool)> =
-        m.components.iter().filter(|c| c.kind == "pin_in" || c.kind == "pin_out").map(|c| (c, c.kind == "pin_in")).collect();
+    let mut v: Vec<(&crate::Component, bool)> = m
+        .components
+        .iter()
+        .filter(|c| c.kind == "pin_in" || c.kind == "pin_out")
+        .map(|c| (c, c.kind == "pin_in"))
+        .collect();
     v.sort_by_key(|(c, is_in)| (!*is_in, c.y, c.x, c.id));
     v.iter()
         .map(|(c, is_in)| PinDesc {
@@ -200,8 +292,9 @@ pub fn module_pins(m: &Module) -> Vec<PinDesc> {
 
 /// Kinds that count as "parts" for challenge scoring (logic and memory).
 pub const PART_KINDS: &[&str] = &[
-    "buf", "not", "and", "nand", "or", "nor", "xor", "xnor", "tri", "mux", "demux", "decoder", "adder", "cmp", "latch_sr", "latch_d", "dff",
-    "tff", "jkff", "register", "counter", "shiftreg", "rom", "ram",
+    "buf", "not", "and", "nand", "or", "nor", "xor", "xnor", "tri", "mux", "demux", "decoder",
+    "adder", "cmp", "latch_sr", "latch_d", "dff", "tff", "jkff", "register", "counter", "shiftreg",
+    "rom", "ram",
 ];
 
 /// Palette metadata. `params[].type`: int | bool | enum | string | data.

@@ -39,7 +39,15 @@ impl Oracle {
             for _sweep in 0..100_000 {
                 let mut changed = false;
                 for g in self.nl.gates.iter().rev() {
-                    let (n, _) = eval_gate(&self.nl, g, &self.val, &self.flag, &mut self.state, &self.mems, &mut out);
+                    let (n, _) = eval_gate(
+                        &self.nl,
+                        g,
+                        &self.val,
+                        &self.flag,
+                        &mut self.state,
+                        &self.mems,
+                        &mut out,
+                    );
                     for k in 0..n {
                         let net = self.nl.outs[g.out_start as usize + k] as usize;
                         if (self.val[net], self.flag[net]) != out[k] {
@@ -58,7 +66,14 @@ impl Oracle {
                 let n = self.nl.ins[g.in_start as usize + k] as usize;
                 let level = clk_level(self.val[n], self.flag[n]);
                 if self.prev_clk[gi] == 0 && level == 1 {
-                    pending.extend(sample(&self.nl, gi as u32, &self.val, &self.flag, &self.state, &self.mems));
+                    pending.extend(sample(
+                        &self.nl,
+                        gi as u32,
+                        &self.val,
+                        &self.flag,
+                        &self.state,
+                        &self.mems,
+                    ));
                 }
                 self.prev_clk[gi] = level;
             }
@@ -72,7 +87,9 @@ impl Oracle {
                         self.state[s] = v;
                         self.state[s + 1] = f;
                     }
-                    Pending::Mem(gi, a, d) => self.mems[self.nl.gates[gi as usize].mem as usize][a as usize] = d,
+                    Pending::Mem(gi, a, d) => {
+                        self.mems[self.nl.gates[gi as usize].mem as usize][a as usize] = d
+                    }
                     Pending::Push(gi, d) => {
                         let g = &self.nl.gates[gi as usize];
                         let s = g.state as usize;

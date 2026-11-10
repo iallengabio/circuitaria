@@ -23,7 +23,10 @@ impl T {
     fn new(p: Project) -> T {
         let nl = compile(&p);
         assert!(!nl.has_errors(), "{:?}", nl.diags);
-        T { sim: Sim::new(nl), p }
+        T {
+            sim: Sim::new(nl),
+            p,
+        }
     }
     fn of(main: Module) -> T {
         T::new(proj(main))
@@ -64,8 +67,16 @@ fn shift_register_has_no_race() {
     t.set(d, 1);
     t.pulse(clk);
     t.set(d, 0);
-    let q = |t: &T| ffs.iter().map(|f| t.get(*f, "q").unwrap()).collect::<Vec<_>>();
-    assert_eq!(q(&t), [1, 0, 0, 0], "one edge moves the bit exactly one stage");
+    let q = |t: &T| {
+        ffs.iter()
+            .map(|f| t.get(*f, "q").unwrap())
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(
+        q(&t),
+        [1, 0, 0, 0],
+        "one edge moves the bit exactly one stage"
+    );
     t.pulse(clk);
     assert_eq!(q(&t), [0, 1, 0, 0]);
     t.pulse(clk);
@@ -85,13 +96,20 @@ fn ripple_counter_counts_through_derived_clocks() {
     let mut t = T::of(b.finish());
     for n in 1..=20u64 {
         t.pulse(clk);
-        let v: u64 = ffs.iter().enumerate().map(|(k, f)| t.get(*f, "q").unwrap() << k).sum();
+        let v: u64 = ffs
+            .iter()
+            .enumerate()
+            .map(|(k, f)| t.get(*f, "q").unwrap() << k)
+            .sum();
         assert_eq!(v, n % 16, "a single tick ripples through all four stages");
     }
 }
 
 fn nand_latch(b: &mut MB) -> (Id, Id, Id, Id) {
-    let (s, r) = (b.add("switch", json!({"on": true})), b.add("switch", json!({"on": true})));
+    let (s, r) = (
+        b.add("switch", json!({"on": true})),
+        b.add("switch", json!({"on": true})),
+    );
     let (g1, g2) = (b.add("nand", json!({})), b.add("nand", json!({})));
     b.wire((s, "y"), (g1, "i0"));
     b.wire((g2, "y"), (g1, "i1"));
@@ -105,8 +123,16 @@ fn sr_latch_from_nands() {
     let mut b = MB::new("main");
     let (s, r, q, nq) = nand_latch(&mut b);
     let mut t = T::of(b.finish());
-    assert_eq!(t.show(q, "y"), "X", "power-up state is unknown, not an arbitrary winner");
-    assert_eq!(t.sim.take_events() & EV_OSCILLATION, 0, "an idle latch is not an oscillation");
+    assert_eq!(
+        t.show(q, "y"),
+        "X",
+        "power-up state is unknown, not an arbitrary winner"
+    );
+    assert_eq!(
+        t.sim.take_events() & EV_OSCILLATION,
+        0,
+        "an idle latch is not an oscillation"
+    );
     t.set(s, 0);
     assert_eq!((t.get(q, "y"), t.get(nq, "y")), (Some(1), Some(0)));
     t.set(s, 1);
@@ -126,7 +152,10 @@ fn sr_latch_simultaneous_release_is_unknown() {
     t.set(r, 0);
     assert_eq!((t.get(q, "y"), t.get(nq, "y")), (Some(1), Some(1)));
     t.sim.take_events();
-    let (gs, gr) = (t.sim.nl.gate_of("", s).unwrap(), t.sim.nl.gate_of("", r).unwrap());
+    let (gs, gr) = (
+        t.sim.nl.gate_of("", s).unwrap(),
+        t.sim.nl.gate_of("", r).unwrap(),
+    );
     t.sim.set_input(gs, 1);
     t.sim.set_input(gr, 1);
     t.sim.settle();
@@ -161,9 +190,18 @@ fn ring_oscillator_is_reported_and_does_not_hang() {
 #[test]
 fn tristate_bus_resolution_and_contention() {
     let mut b = MB::new("main");
-    let (a, ea) = (b.add("number_in", json!({"width": 4, "value": 5})), b.add("switch", json!({})));
-    let (c, ec) = (b.add("number_in", json!({"width": 4, "value": 9})), b.add("switch", json!({})));
-    let (ta, tc) = (b.add("tri", json!({"width": 4})), b.add("tri", json!({"width": 4})));
+    let (a, ea) = (
+        b.add("number_in", json!({"width": 4, "value": 5})),
+        b.add("switch", json!({})),
+    );
+    let (c, ec) = (
+        b.add("number_in", json!({"width": 4, "value": 9})),
+        b.add("switch", json!({})),
+    );
+    let (ta, tc) = (
+        b.add("tri", json!({"width": 4})),
+        b.add("tri", json!({"width": 4})),
+    );
     let out = b.add("number_out", json!({"width": 4}));
     b.wire((a, "y"), (ta, "a"));
     b.wire((ea, "y"), (ta, "en"));
@@ -178,7 +216,11 @@ fn tristate_bus_resolution_and_contention() {
     t.sim.take_events();
     t.set(ec, 1);
     assert_ne!(t.sim.take_events() & EV_CONTENTION, 0);
-    assert_eq!(t.show(out, "a"), "XX01", "5=0101 vs 9=1001: only differing bits clash");
+    assert_eq!(
+        t.show(out, "a"),
+        "XX01",
+        "5=0101 vs 9=1001: only differing bits clash"
+    );
     t.set(ea, 0);
     assert_eq!(t.get(out, "a"), Some(9));
 }
@@ -186,8 +228,13 @@ fn tristate_bus_resolution_and_contention() {
 #[test]
 fn pull_up_defines_a_floating_bus() {
     let mut b = MB::new("main");
-    let (a, en, tri, pull, led) =
-        (b.add("const", json!({"value": 0})), b.add("switch", json!({})), b.add("tri", json!({})), b.add("pull", json!({"up": true})), b.add("led", json!({})));
+    let (a, en, tri, pull, led) = (
+        b.add("const", json!({"value": 0})),
+        b.add("switch", json!({})),
+        b.add("tri", json!({})),
+        b.add("pull", json!({"up": true})),
+        b.add("led", json!({})),
+    );
     b.wire((a, "y"), (tri, "a"));
     b.wire((en, "y"), (tri, "en"));
     b.wire((tri, "y"), (led, "a"));
@@ -202,8 +249,14 @@ fn pull_up_defines_a_floating_bus() {
 fn nested_adder() -> (Project, Id, Id, Id) {
     let mut p = Project::new("adder");
     let mut h = MB::new("half");
-    let (a, b_) = (h.add("pin_in", json!({"name": "a"})), h.add("pin_in", json!({"name": "b"})));
-    let (s, c) = (h.add("pin_out", json!({"name": "s"})), h.add("pin_out", json!({"name": "c"})));
+    let (a, b_) = (
+        h.add("pin_in", json!({"name": "a"})),
+        h.add("pin_in", json!({"name": "b"})),
+    );
+    let (s, c) = (
+        h.add("pin_out", json!({"name": "s"})),
+        h.add("pin_out", json!({"name": "c"})),
+    );
     let x = h.gate("xor", &[(a, "y"), (b_, "y")]);
     let n = h.gate("and", &[(a, "y"), (b_, "y")]);
     h.wire(x, (s, "a"));
@@ -212,8 +265,15 @@ fn nested_adder() -> (Project, Id, Id, Id) {
     let hp = [a, b_, s, c].map(ic_pin);
 
     let mut f = MB::new("full");
-    let (fa, fb, fc) = (f.add("pin_in", json!({"name": "a"})), f.add("pin_in", json!({"name": "b"})), f.add("pin_in", json!({"name": "cin"})));
-    let (fs, fco) = (f.add("pin_out", json!({"name": "s"})), f.add("pin_out", json!({"name": "cout"})));
+    let (fa, fb, fc) = (
+        f.add("pin_in", json!({"name": "a"})),
+        f.add("pin_in", json!({"name": "b"})),
+        f.add("pin_in", json!({"name": "cin"})),
+    );
+    let (fs, fco) = (
+        f.add("pin_out", json!({"name": "s"})),
+        f.add("pin_out", json!({"name": "cout"})),
+    );
     let (h1, h2) = (f.ic("half"), f.ic("half"));
     f.wire((fa, "y"), (h1, &hp[0]));
     f.wire((fb, "y"), (h1, &hp[1]));
@@ -226,8 +286,14 @@ fn nested_adder() -> (Project, Id, Id, Id) {
     let fp = [fa, fb, fc, fs, fco].map(ic_pin);
 
     let mut m = MB::new("main");
-    let (a, b_) = (m.add("number_in", json!({"width": 8})), m.add("number_in", json!({"width": 8})));
-    let (sa, sb) = (m.add("splitter", json!({"width": 8})), m.add("splitter", json!({"width": 8})));
+    let (a, b_) = (
+        m.add("number_in", json!({"width": 8})),
+        m.add("number_in", json!({"width": 8})),
+    );
+    let (sa, sb) = (
+        m.add("splitter", json!({"width": 8})),
+        m.add("splitter", json!({"width": 8})),
+    );
     let mg = m.add("merger", json!({"width": 9, "parts": "1,1,1,1,1,1,1,1,1"}));
     let out = m.add("number_out", json!({"width": 9}));
     m.wire((a, "y"), (sa, "a"));
@@ -258,13 +324,27 @@ fn nested_ics_build_an_8_bit_adder() {
     let (p, a, b, out) = nested_adder();
     let mut t = T::new(p);
     assert_eq!(t.sim.nl.parts, 8 * 5, "5 gates per full adder, flattened");
-    for (x, y) in [(0u64, 0u64), (1, 1), (255, 1), (200, 100), (255, 255), (170, 85), (37, 219)] {
+    for (x, y) in [
+        (0u64, 0u64),
+        (1, 1),
+        (255, 1),
+        (200, 100),
+        (255, 255),
+        (170, 85),
+        (37, 219),
+    ] {
         t.set(a, x);
         t.set(b, y);
         assert_eq!(t.get(out, "a"), Some(x + y));
     }
     // State inside an instance is addressable through its hierarchical path.
-    let inner = t.sim.nl.debug.iter().filter(|d| t.sim.nl.paths[d.path as usize].matches('/').count() == 2).count();
+    let inner = t
+        .sim
+        .nl
+        .debug
+        .iter()
+        .filter(|d| t.sim.nl.paths[d.path as usize].matches('/').count() == 2)
+        .count();
     assert_eq!(inner, 8 * 2 * 6, "16 half adders with 6 components each");
 }
 
@@ -290,19 +370,28 @@ fn hierarchy_cycles_and_width_mismatches_are_diagnosed() {
     p.modules.insert("a".into(), a.finish());
     let mut m = MB::new("main");
     m.ic("a");
-    let (n, l) = (m.add("number_in", json!({"width": 4})), m.add("led", json!({})));
+    let (n, l) = (
+        m.add("number_in", json!({"width": 4})),
+        m.add("led", json!({})),
+    );
     m.wire((n, "y"), (l, "a"));
     p.modules.insert("main".into(), m.finish());
     let nl = compile(&p);
     let codes: Vec<_> = nl.diags.iter().map(|d| d.code).collect();
-    assert!(codes.contains(&"hierarchy_cycle") && codes.contains(&"width_mismatch"), "{codes:?}");
+    assert!(
+        codes.contains(&"hierarchy_cycle") && codes.contains(&"width_mismatch"),
+        "{codes:?}"
+    );
     let _ = Sim::new(nl); // still loads without panicking
 }
 
 #[test]
 fn clock_gating_and_generator() {
     let mut b = MB::new("main");
-    let (clk, en) = (b.add("clock", json!({"half": 2})), b.add("switch", json!({})));
+    let (clk, en) = (
+        b.add("clock", json!({"half": 2})),
+        b.add("switch", json!({})),
+    );
     let g = b.gate("and", &[(clk, "y"), (en, "y")]);
     let cnt = b.add("counter", json!({"width": 8}));
     b.wire(g, (cnt, "clk"));
@@ -317,7 +406,11 @@ fn clock_gating_and_generator() {
 #[test]
 fn counter_modulus_load_and_async_clear() {
     let mut b = MB::new("main");
-    let (clk, clr, load) = (b.add("switch", json!({})), b.add("switch", json!({})), b.add("switch", json!({})));
+    let (clk, clr, load) = (
+        b.add("switch", json!({})),
+        b.add("switch", json!({})),
+        b.add("switch", json!({})),
+    );
     let d = b.add("number_in", json!({"width": 4, "value": 7}));
     let c = b.add("counter", json!({"width": 4, "mod": 10}));
     b.wire((clk, "y"), (c, "clk"));
@@ -341,10 +434,17 @@ fn counter_modulus_load_and_async_clear() {
 #[test]
 fn ram_rom_and_memory_mapped_outputs() {
     let mut b = MB::new("main");
-    let (addr, din, we, clk) =
-        (b.add("number_in", json!({"width": 4})), b.add("number_in", json!({"width": 8})), b.add("switch", json!({})), b.add("switch", json!({})));
+    let (addr, din, we, clk) = (
+        b.add("number_in", json!({"width": 4})),
+        b.add("number_in", json!({"width": 8})),
+        b.add("switch", json!({})),
+        b.add("switch", json!({})),
+    );
     let ram = b.add("ram", json!({"addrBits": 4, "width": 8}));
-    let rom = b.add("rom", json!({"addrBits": 4, "width": 8, "data": "10 20 3f"}));
+    let rom = b.add(
+        "rom",
+        json!({"addrBits": 4, "width": 8, "data": "10 20 3f"}),
+    );
     b.wire((addr, "y"), (ram, "addr"));
     b.wire((addr, "y"), (rom, "addr"));
     b.wire((din, "y"), (ram, "din"));
@@ -387,7 +487,11 @@ fn hot_patch_preserves_state() {
     t.p.modules.insert("main".into(), b.finish());
     t.sim = Sim::with_state_from(compile(&t.p), &t.sim);
     assert_eq!(t.get(out, "a"), Some(5), "native state survives");
-    assert_eq!(t.get(q, "y"), Some(1), "state held in a gate-level loop survives too");
+    assert_eq!(
+        t.get(q, "y"),
+        Some(1),
+        "state held in a gate-level loop survives too"
+    );
     t.pulse(clk);
     assert_eq!(t.get(out, "a"), Some(6));
 }
@@ -463,18 +567,29 @@ struct Spec {
 }
 
 fn spec() -> impl Strategy<Value = Spec> {
-    (1usize..5, prop::collection::vec((0usize..64, 0usize..64), 0..6), prop::collection::vec((0u8..8, 0usize..64, 0usize..64), 1..40))
+    (
+        1usize..5,
+        prop::collection::vec((0usize..64, 0usize..64), 0..6),
+        prop::collection::vec((0u8..8, 0usize..64, 0usize..64), 1..40),
+    )
         .prop_flat_map(|(inputs, ffs, gates)| {
             let stim = prop::collection::vec((0..inputs, 0u64..16, any::<bool>()), 1..60);
             (Just(inputs), Just(ffs), Just(gates), stim)
         })
-        .prop_map(|(inputs, ffs, gates, stim)| Spec { inputs, ffs, gates, stim })
+        .prop_map(|(inputs, ffs, gates, stim)| Spec {
+            inputs,
+            ffs,
+            gates,
+            stim,
+        })
 }
 
 fn build(s: &Spec) -> (Project, Vec<Id>) {
     const W: u8 = 4;
     let mut b = MB::new("main");
-    let inputs: Vec<Id> = (0..s.inputs).map(|_| b.add("number_in", json!({"width": W}))).collect();
+    let inputs: Vec<Id> = (0..s.inputs)
+        .map(|_| b.add("number_in", json!({"width": W})))
+        .collect();
     let mut sig: Vec<(Id, &str)> = inputs.iter().map(|i| (*i, "y")).collect();
     // 1-bit clock candidates: bit 0 of inputs, then earlier flip-flop outputs (ripple).
     let mut clocks: Vec<(Id, &str)> = vec![];

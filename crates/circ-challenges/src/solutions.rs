@@ -44,12 +44,19 @@ fn build(kind: &str, b: &mut MB) {
         }
         "council" => {
             let (v1, v2, v3) = (i(b, "voto1"), i(b, "voto2"), i(b, "voto3"));
-            let (a, c, d) = (b.gate("and", &[v1, v2]), b.gate("and", &[v1, v3]), b.gate("and", &[v2, v3]));
+            let (a, c, d) = (
+                b.gate("and", &[v1, v2]),
+                b.gate("and", &[v1, v3]),
+                b.gate("and", &[v2, v3]),
+            );
             let r = b.gate("or", &[a, c, d]);
             b.wire(r, o(b, "aprovado"));
         }
         "market" => {
-            let (sa, sb) = (b.add("splitter", json!({"width": 4})), b.add("splitter", json!({"width": 4})));
+            let (sa, sb) = (
+                b.add("splitter", json!({"width": 4})),
+                b.add("splitter", json!({"width": 4})),
+            );
             let mg = b.add("merger", json!({"width": 5}));
             b.wire(i(b, "precoA"), (sa, "a"));
             b.wire(i(b, "precoB"), (sb, "a"));
@@ -121,7 +128,10 @@ fn build(kind: &str, b: &mut MB) {
             for f in &ffs {
                 b.wire(clk, (*f, "clk"));
             }
-            let (acc, coin) = (b.add("merger", json!({"width": 3})), b.add("merger", json!({"width": 3})));
+            let (acc, coin) = (
+                b.add("merger", json!({"width": 3})),
+                b.add("merger", json!({"width": 3})),
+            );
             b.wire((ffs[0], "q"), (acc, "b0"));
             b.wire((ffs[1], "q"), (acc, "b1"));
             b.wire((zero, "y"), (acc, "b2"));
@@ -178,7 +188,10 @@ fn build(kind: &str, b: &mut MB) {
             b.wire((ram, "dout"), o(b, "saida"));
         }
         "maze" => {
-            let route = [1, 1, 3, 1, 1, 3, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 3, 1, 1, 3, 1, 1, 1, 1];
+            let route = [
+                1, 1, 3, 1, 1, 3, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 3, 1, 1, 3, 1, 1, 1,
+                1,
+            ];
             let c = b.add("counter", json!({"width": 5}));
             let rom = b.add("rom", json!({"addrBits": 5, "width": 2, "data": route}));
             b.wire(i(b, "clk"), (c, "clk"));
@@ -201,10 +214,24 @@ mod tests {
         for ch in &c.challenges {
             let rep = verify(&solution(ch), ch);
             assert!(rep.ok, "{}: {:?}", ch.id, rep);
-            assert_eq!((rep.stars, rep.parts), (3, ch.par[1]), "{}: par[1] must be the reference part count", ch.id);
-            assert!(ch.unlocks.iter().all(|k| circ_model::catalog::pins(k, &Default::default()).is_some()));
+            assert_eq!(
+                (rep.stars, rep.parts),
+                (3, ch.par[1]),
+                "{}: par[1] must be the reference part count",
+                ch.id
+            );
+            assert!(ch
+                .unlocks
+                .iter()
+                .all(|k| circ_model::catalog::pins(k, &Default::default()).is_some()));
             for lang in ["pt", "en"] {
-                assert!(ch.title.contains_key(lang) && ch.story.contains_key(lang) && ch.hints[lang].len() == 2, "{}", ch.id);
+                assert!(
+                    ch.title.contains_key(lang)
+                        && ch.story.contains_key(lang)
+                        && ch.hints[lang].len() == 2,
+                    "{}",
+                    ch.id
+                );
             }
         }
     }
@@ -213,7 +240,11 @@ mod tests {
     fn empty_boards_and_wrong_circuits_fail() {
         for ch in &campaign().challenges {
             let rep = verify(&template(ch), ch);
-            assert!(!rep.ok && rep.stars == 0, "{} passes with an empty board", ch.id);
+            assert!(
+                !rep.ok && rep.stars == 0,
+                "{} passes with an empty board",
+                ch.id
+            );
         }
         // A buffer instead of an inverter: uses a forbidden part and is wrong.
         let ch = crate::find("w1-l01-lampada").unwrap();
@@ -224,7 +255,10 @@ mod tests {
         p.modules.insert("main".into(), b.finish());
         let rep = verify(&p, &ch);
         assert_eq!(rep.illegal, ["buf"]);
-        assert!(rep.scenarios.iter().all(|s| !s.passed && s.code == "wrong_output"));
+        assert!(rep
+            .scenarios
+            .iter()
+            .all(|s| !s.passed && s.code == "wrong_output"));
         // Crossed motors lose the line.
         let ch = crate::find("w4-l13-seguidor").unwrap();
         let mut b = MB::from_module(template(&ch).modules.remove("main").unwrap());
@@ -234,13 +268,19 @@ mod tests {
         b.wire(r, o(&b, "motorE"));
         let mut p = template(&ch);
         p.modules.insert("main".into(), b.finish());
-        assert!(verify(&p, &ch).scenarios.iter().any(|s| s.code == "lost_line"));
+        assert!(verify(&p, &ch)
+            .scenarios
+            .iter()
+            .any(|s| s.code == "lost_line"));
     }
 
     #[test]
     fn verification_is_deterministic() {
         let ch = crate::find("w4-l12-elevador").unwrap();
         let (a, b) = (verify(&solution(&ch), &ch), verify(&solution(&ch), &ch));
-        assert_eq!(serde_json::to_string(&a).unwrap(), serde_json::to_string(&b).unwrap());
+        assert_eq!(
+            serde_json::to_string(&a).unwrap(),
+            serde_json::to_string(&b).unwrap()
+        );
     }
 }

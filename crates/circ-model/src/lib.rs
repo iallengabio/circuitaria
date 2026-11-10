@@ -76,8 +76,21 @@ pub struct Wire {
 impl Project {
     pub fn new(name: &str) -> Self {
         let mut modules = BTreeMap::new();
-        modules.insert("main".to_string(), Module { name: "main".into(), ..Default::default() });
-        Project { schema_version: SCHEMA_VERSION, name: name.into(), main: "main".into(), modules, next_id: 1, meta: Params::new() }
+        modules.insert(
+            "main".to_string(),
+            Module {
+                name: "main".into(),
+                ..Default::default()
+            },
+        );
+        Project {
+            schema_version: SCHEMA_VERSION,
+            name: name.into(),
+            main: "main".into(),
+            modules,
+            next_id: 1,
+            meta: Params::new(),
+        }
     }
 
     /// Defensive load: size limits, schema migration, structural limits.
@@ -106,7 +119,10 @@ impl Project {
 
 /// Schema migrations. Each step upgrades `schemaVersion` by one.
 fn migrate(v: Value) -> Result<Value, String> {
-    let ver = v.get("schemaVersion").and_then(Value::as_u64).ok_or("missing_schema_version")? as u32;
+    let ver = v
+        .get("schemaVersion")
+        .and_then(Value::as_u64)
+        .ok_or("missing_schema_version")? as u32;
     if ver > SCHEMA_VERSION {
         return Err(format!("newer_schema: {ver}"));
     }
@@ -123,7 +139,10 @@ pub fn module_at<'a>(p: &'a Project, path: &str) -> Option<(&'a str, &'a Module)
     let mut m = p.modules.get(id)?;
     for seg in path.split('/').filter(|s| !s.is_empty()) {
         let cid: Id = seg.parse().ok()?;
-        let c = m.components.iter().find(|c| c.id == cid && c.kind == "ic")?;
+        let c = m
+            .components
+            .iter()
+            .find(|c| c.id == cid && c.kind == "ic")?;
         id = c.params.get("module")?.as_str()?;
         m = p.modules.get(id)?;
     }
@@ -152,7 +171,13 @@ mod tests {
     fn rejects_bad_files() {
         assert!(Project::from_json("{").is_err());
         assert!(Project::from_json("{}").is_err());
-        assert!(Project::from_json(r#"{"schemaVersion":99,"name":"x","main":"main","modules":{}}"#).is_err());
-        assert!(Project::from_json(r#"{"schemaVersion":1,"name":"x","main":"nope","modules":{}}"#).is_err());
+        assert!(Project::from_json(
+            r#"{"schemaVersion":99,"name":"x","main":"main","modules":{}}"#
+        )
+        .is_err());
+        assert!(
+            Project::from_json(r#"{"schemaVersion":1,"name":"x","main":"nope","modules":{}}"#)
+                .is_err()
+        );
     }
 }

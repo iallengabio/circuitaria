@@ -11,3 +11,6 @@ circ-compile.workspace = true
 circ-engine.workspace = true
 circ-examples.workspace = true
 circ-challenges = { workspace = true, features = ["solutions"] }
+
+[lints]
+workspace = true

@@ -1,0 +1,11 @@
+# Circuitaria — notas para o agente
+- Leia SPEC.md (§0, §5 e §18 primeiro). Decisões vão em docs/adr/.
+- Motor em Rust: sem alocação no laço quente; sem `unsafe` sem comentário `// SAFETY:` e teste (hoje só existe em crates/circ-wasm).
+- Qualquer mudança de semântica em §5.3 exige atualizar crates/circ-engine/tests/semantics.rs E a spec no mesmo PR.
+- Determinismo é requisito: nada de HashMap com iteração observável (use BTreeMap), nada de float nos mundos. O hash de `circ-cli hash` tem de ser igual ao do WASM (`tools/wasm-check.mjs`).
+- Pinos de cada peça são definidos só em crates/circ-model/src/catalog.rs; a UI os consulta via WASM. A exceção é `modulePins` em apps/ui/src/lib/model.ts, que espelha `module_pins` — mantenha os dois em sincronia.
+- `par[1]` de cada desafio em content/challenges/campaign.json é a contagem de peças da solução de referência (um teste garante).
+- UI: nenhuma string hardcoded (content/i18n/*.json, mesmas chaves em pt-BR e en); cores do canvas em apps/ui/src/lib/theme.ts e do DOM em apps/ui/src/app.css; não depender só de cor.
+- Depois de mexer em crates/, rode `pnpm wasm` para atualizar apps/ui/public/circ.wasm (e `pnpm examples` se mudou circ-examples).
+- Antes de concluir: `cargo fmt --all && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace` e `pnpm lint && pnpm test`.
+- Se uma suposição [Sx] da spec bloquear uma decisão grande, pergunte ao humano.

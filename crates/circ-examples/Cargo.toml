@@ -11,3 +11,6 @@ circ-model.workspace = true
 [dev-dependencies]
 circ-compile.workspace = true
 circ-engine.workspace = true
+
+[lints]
+workspace = true

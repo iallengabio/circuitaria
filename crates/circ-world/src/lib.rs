@@ -39,7 +39,10 @@ pub enum Status {
     Running,
     Won,
     /// `code` is an i18n key suffix; `detail` carries values for the message.
-    Lost { code: &'static str, detail: String },
+    Lost {
+        code: &'static str,
+        detail: String,
+    },
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -66,8 +69,22 @@ pub trait World {
 }
 
 pub const KINDS: &[&str] = &[
-    "lamp", "vault", "door", "museum", "council", "market", "lock", "turret", "factory", "traffic", "vending", "elevator", "line", "telegraph",
-    "simon", "maze",
+    "lamp",
+    "vault",
+    "door",
+    "museum",
+    "council",
+    "market",
+    "lock",
+    "turret",
+    "factory",
+    "traffic",
+    "vending",
+    "elevator",
+    "line",
+    "telegraph",
+    "simon",
+    "maze",
 ];
 
 pub fn make(kind: &str) -> Option<Box<dyn World>> {

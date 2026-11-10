@@ -1,0 +1,40 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+      - run: cargo build --release -p circ-cli
+      - name: Reference solutions pass every challenge
+        run: cargo run --release -p circ-cli -- challenges
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Determinism (native hash == WASM hash)
+        shell: bash
+        run: node tools/wasm-check.mjs apps/ui/public/circ.wasm "$(cargo run -q --release -p circ-cli -- hash)"
+      - run: pnpm lint
+      - run: pnpm test
+      - name: Benchmarks (informative)
+        run: cargo run --release -p circ-cli -- bench --quick

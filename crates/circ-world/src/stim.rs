@@ -74,18 +74,60 @@ const fn p(name: &'static str, width: u8) -> Port {
 fn ports(k: Kind) -> (Vec<Port>, Vec<Port>) {
     match k {
         Kind::Lamp => (vec![p("interruptor", 1)], vec![p("lampada", 1)]),
-        Kind::Vault => (vec![p("b1", 1), p("b2", 1), p("b3", 1), p("b4", 1)], vec![p("abrir", 1)]),
-        Kind::Door => (vec![p("guardaA", 1), p("guardaB", 1), p("mestre", 1)], vec![p("porta", 1)]),
-        Kind::Museum => (vec![p("feixe1", 1), p("feixe2", 1), p("feixe3", 1), p("chave", 1)], vec![p("sirene", 1)]),
-        Kind::Council => (vec![p("voto1", 1), p("voto2", 1), p("voto3", 1)], vec![p("aprovado", 1)]),
+        Kind::Vault => (
+            vec![p("b1", 1), p("b2", 1), p("b3", 1), p("b4", 1)],
+            vec![p("abrir", 1)],
+        ),
+        Kind::Door => (
+            vec![p("guardaA", 1), p("guardaB", 1), p("mestre", 1)],
+            vec![p("porta", 1)],
+        ),
+        Kind::Museum => (
+            vec![
+                p("feixe1", 1),
+                p("feixe2", 1),
+                p("feixe3", 1),
+                p("chave", 1),
+            ],
+            vec![p("sirene", 1)],
+        ),
+        Kind::Council => (
+            vec![p("voto1", 1), p("voto2", 1), p("voto3", 1)],
+            vec![p("aprovado", 1)],
+        ),
         Kind::Market => (vec![p("precoA", 4), p("precoB", 4)], vec![p("total", 5)]),
         Kind::Lock => (vec![p("botao", 1)], vec![p("trava", 1)]),
         Kind::Turret => (vec![p("sensor", 1)], vec![p("canhaoE", 1), p("canhaoD", 1)]),
-        Kind::Factory => (vec![p("sensor", 1), p("zerar", 1)], vec![p("contagem", 4), p("parar", 1)]),
-        Kind::Traffic => (vec![p("clk", 1)], vec![p("verde", 1), p("amarelo", 1), p("vermelho", 1), p("pedestre", 1)]),
-        Kind::Vending => (vec![p("moeda1", 1), p("moeda2", 1)], vec![p("liberar", 1), p("troco", 1)]),
-        Kind::Telegraph => (vec![p("dado", 8), p("enviar", 1), p("clk", 1)], vec![p("laser", 1)]),
-        Kind::Simon => (vec![p("cor", 2), p("gravar", 1), p("tocar", 1), p("reiniciar", 1)], vec![p("saida", 2)]),
+        Kind::Factory => (
+            vec![p("sensor", 1), p("zerar", 1)],
+            vec![p("contagem", 4), p("parar", 1)],
+        ),
+        Kind::Traffic => (
+            vec![p("clk", 1)],
+            vec![
+                p("verde", 1),
+                p("amarelo", 1),
+                p("vermelho", 1),
+                p("pedestre", 1),
+            ],
+        ),
+        Kind::Vending => (
+            vec![p("moeda1", 1), p("moeda2", 1)],
+            vec![p("liberar", 1), p("troco", 1)],
+        ),
+        Kind::Telegraph => (
+            vec![p("dado", 8), p("enviar", 1), p("clk", 1)],
+            vec![p("laser", 1)],
+        ),
+        Kind::Simon => (
+            vec![
+                p("cor", 2),
+                p("gravar", 1),
+                p("tocar", 1),
+                p("reiniciar", 1),
+            ],
+            vec![p("saida", 2)],
+        ),
     }
 }
 
@@ -97,20 +139,28 @@ struct Step {
 }
 
 fn st(set: &[(usize, u64)], exp: &[(usize, u64)]) -> Step {
-    Step { set: set.to_vec(), exp: exp.to_vec() }
+    Step {
+        set: set.to_vec(),
+        exp: exp.to_vec(),
+    }
 }
 
 /// Combinational beats: every vector sets all inputs and expects f(inputs).
 fn comb(vectors: Vec<Vec<u64>>, f: impl Fn(&[u64]) -> Vec<u64>) -> Vec<Step> {
     vectors
         .into_iter()
-        .map(|v| Step { exp: f(&v).into_iter().enumerate().collect(), set: v.into_iter().enumerate().collect() })
+        .map(|v| Step {
+            exp: f(&v).into_iter().enumerate().collect(),
+            set: v.into_iter().enumerate().collect(),
+        })
         .collect()
 }
 
 /// All 2^n one-bit vectors in a seeded random order.
 fn shuffled(r: &mut Rng, n: usize) -> Vec<Vec<u64>> {
-    let mut v: Vec<Vec<u64>> = (0..1u64 << n).map(|x| (0..n).map(|b| (x >> b) & 1).collect()).collect();
+    let mut v: Vec<Vec<u64>> = (0..1u64 << n)
+        .map(|x| (0..n).map(|b| (x >> b) & 1).collect())
+        .collect();
     for k in (1..v.len()).rev() {
         v.swap(k, r.below(k as u64 + 1) as usize);
     }
@@ -126,29 +176,85 @@ fn script(kind: Kind, sc: usize) -> Vec<Step> {
     let hidden = sc >= kind.counts().0;
     let b = |x: bool| x as u64;
     match kind {
-        Kind::Lamp => comb(if hidden { (0..10).map(|_| vec![r.below(2)]).collect() } else { bits(&[&[0], &[1], &[0], &[1]]) }, |i| vec![1 - i[0]]),
+        Kind::Lamp => comb(
+            if hidden {
+                (0..10).map(|_| vec![r.below(2)]).collect()
+            } else {
+                bits(&[&[0], &[1], &[0], &[1]])
+            },
+            |i| vec![1 - i[0]],
+        ),
         Kind::Vault => comb(
-            if hidden { shuffled(&mut r, 4) } else { bits(&[&[0, 0, 0, 0], &[1, 1, 1, 1], &[1, 0, 1, 0], &[1, 0, 1, 1], &[0, 0, 1, 1], &[1, 0, 1, 1]]) },
+            if hidden {
+                shuffled(&mut r, 4)
+            } else {
+                bits(&[
+                    &[0, 0, 0, 0],
+                    &[1, 1, 1, 1],
+                    &[1, 0, 1, 0],
+                    &[1, 0, 1, 1],
+                    &[0, 0, 1, 1],
+                    &[1, 0, 1, 1],
+                ])
+            },
             |i| vec![b(i == [1, 0, 1, 1])],
         ),
         Kind::Door => comb(
-            if hidden { shuffled(&mut r, 3) } else { bits(&[&[0, 0, 0], &[1, 0, 0], &[0, 1, 0], &[1, 1, 0], &[0, 0, 1], &[0, 0, 0]]) },
+            if hidden {
+                shuffled(&mut r, 3)
+            } else {
+                bits(&[
+                    &[0, 0, 0],
+                    &[1, 0, 0],
+                    &[0, 1, 0],
+                    &[1, 1, 0],
+                    &[0, 0, 1],
+                    &[0, 0, 0],
+                ])
+            },
             |i| vec![(i[0] & i[1]) | i[2]],
         ),
         Kind::Museum => comb(
             match sc {
-                0 => bits(&[&[1, 1, 1, 0], &[1, 0, 1, 0], &[1, 1, 1, 0], &[0, 1, 1, 0], &[1, 1, 1, 0]]),
-                1 => bits(&[&[1, 1, 1, 1], &[1, 1, 0, 1], &[0, 1, 0, 1], &[1, 1, 1, 1], &[1, 1, 1, 0]]),
+                0 => bits(&[
+                    &[1, 1, 1, 0],
+                    &[1, 0, 1, 0],
+                    &[1, 1, 1, 0],
+                    &[0, 1, 1, 0],
+                    &[1, 1, 1, 0],
+                ]),
+                1 => bits(&[
+                    &[1, 1, 1, 1],
+                    &[1, 1, 0, 1],
+                    &[0, 1, 0, 1],
+                    &[1, 1, 1, 1],
+                    &[1, 1, 1, 0],
+                ]),
                 _ => shuffled(&mut r, 4),
             },
             |i| vec![(1 - i[3]) & (1 - (i[0] & i[1] & i[2]))],
         ),
         Kind::Council => comb(
-            if hidden { shuffled(&mut r, 3) } else { bits(&[&[0, 0, 0], &[1, 0, 0], &[1, 1, 0], &[0, 1, 1], &[1, 1, 1], &[0, 0, 1]]) },
+            if hidden {
+                shuffled(&mut r, 3)
+            } else {
+                bits(&[
+                    &[0, 0, 0],
+                    &[1, 0, 0],
+                    &[1, 1, 0],
+                    &[0, 1, 1],
+                    &[1, 1, 1],
+                    &[0, 0, 1],
+                ])
+            },
             |i| vec![b(i[0] + i[1] + i[2] >= 2)],
         ),
         Kind::Market => comb(
-            if hidden { (0..14).map(|_| vec![r.below(16), r.below(16)]).collect() } else { bits(&[&[3, 4], &[9, 9], &[0, 7], &[15, 15], &[8, 8]]) },
+            if hidden {
+                (0..14).map(|_| vec![r.below(16), r.below(16)]).collect()
+            } else {
+                bits(&[&[3, 4], &[9, 9], &[0, 7], &[15, 15], &[8, 8]])
+            },
             |i| vec![i[0] + i[1]],
         ),
         Kind::Lock => {
@@ -200,12 +306,20 @@ fn script(kind: Kind, sc: usize) -> Vec<Step> {
             s
         }
         Kind::Vending => {
-            let coins: Vec<u64> = if hidden { (0..16).map(|_| 1 + r.below(2)).collect() } else { vec![1, 1, 1, 2, 2, 1, 2, 2, 1, 1] };
+            let coins: Vec<u64> = if hidden {
+                (0..16).map(|_| 1 + r.below(2)).collect()
+            } else {
+                vec![1, 1, 1, 2, 2, 1, 2, 2, 1, 1]
+            };
             let mut s = vec![st(&[(0, 0), (1, 0)], &[(0, 0), (1, 0)])];
             let mut total = 0;
             for c in coins {
                 total += c;
-                let exp = if total >= 3 { [(0, 1), (1, b(total == 4))] } else { [(0, 0), (1, 0)] };
+                let exp = if total >= 3 {
+                    [(0, 1), (1, b(total == 4))]
+                } else {
+                    [(0, 0), (1, 0)]
+                };
                 if total >= 3 {
                     total = 0;
                 }
@@ -215,7 +329,11 @@ fn script(kind: Kind, sc: usize) -> Vec<Step> {
             s
         }
         Kind::Telegraph => {
-            let msg: Vec<u64> = if hidden { (0..5).map(|_| r.below(256)).collect() } else { b"OI".iter().map(|c| *c as u64).collect() };
+            let msg: Vec<u64> = if hidden {
+                (0..5).map(|_| r.below(256)).collect()
+            } else {
+                b"OI".iter().map(|c| *c as u64).collect()
+            };
             let mut s = vec![st(&[(0, 0), (1, 0), (2, 0)], &[])];
             for byte in msg {
                 s.push(st(&[(0, byte), (1, 1)], &[]));
@@ -229,7 +347,14 @@ fn script(kind: Kind, sc: usize) -> Vec<Step> {
             s
         }
         Kind::Simon => {
-            let rounds: Vec<Vec<u64>> = if hidden { vec![(0..8).map(|_| r.below(4)).collect(), (0..5).map(|_| r.below(4)).collect()] } else { vec![vec![2, 0, 3, 1]] };
+            let rounds: Vec<Vec<u64>> = if hidden {
+                vec![
+                    (0..8).map(|_| r.below(4)).collect(),
+                    (0..5).map(|_| r.below(4)).collect(),
+                ]
+            } else {
+                vec![vec![2, 0, 3, 1]]
+            };
             let mut s = vec![st(&[(0, 0), (1, 0), (2, 0), (3, 0)], &[])];
             for seq in rounds {
                 s.push(st(&[(3, 1)], &[]));
@@ -267,7 +392,17 @@ pub struct Stim {
 impl Stim {
     pub fn new(kind: Kind) -> Stim {
         let (ins, outs) = ports(kind);
-        let mut s = Stim { kind, cur: vec![0; ins.len()], last: vec![Sig::default(); outs.len()], ins, outs, script: vec![], i: 0, t: 0, status: Status::Running };
+        let mut s = Stim {
+            kind,
+            cur: vec![0; ins.len()],
+            last: vec![Sig::default(); outs.len()],
+            ins,
+            outs,
+            script: vec![],
+            i: 0,
+            t: 0,
+            status: Status::Running,
+        };
         s.reset(0);
         s
     }
@@ -276,7 +411,10 @@ impl Stim {
     }
     /// Events that already happened in this scenario matching `f`.
     fn done(&self, f: impl Fn(&Step) -> bool) -> usize {
-        self.script[..self.i.min(self.script.len())].iter().filter(|s| f(s)).count()
+        self.script[..self.i.min(self.script.len())]
+            .iter()
+            .filter(|s| f(s))
+            .count()
     }
 }
 
@@ -289,7 +427,12 @@ impl World for Stim {
     }
     fn scenarios(&self) -> Vec<Scenario> {
         let (v, h) = self.kind.counts();
-        (0..v + h).map(|k| Scenario { key: format!("{}.{}", self.kind.name(), k + 1), hidden: k >= v }).collect()
+        (0..v + h)
+            .map(|k| Scenario {
+                key: format!("{}.{}", self.kind.name(), k + 1),
+                hidden: k >= v,
+            })
+            .collect()
     }
     fn reset(&mut self, scenario: usize) {
         self.script = script(self.kind, scenario);
@@ -306,8 +449,15 @@ impl World for Stim {
                 for &(k, want) in &self.script[self.i].exp {
                     let got = out[k];
                     if !got.known || got.val != want {
-                        let shown = if got.known { got.val.to_string() } else { "?".into() };
-                        self.status = Status::Lost { code: "wrong_output", detail: format!("{}|{}|{}", self.outs[k].name, want, shown) };
+                        let shown = if got.known {
+                            got.val.to_string()
+                        } else {
+                            "?".into()
+                        };
+                        self.status = Status::Lost {
+                            code: "wrong_output",
+                            detail: format!("{}|{}|{}", self.outs[k].name, want, shown),
+                        };
                         break;
                     }
                 }
@@ -340,7 +490,14 @@ impl World for Stim {
         match self.kind {
             Kind::Lamp => {
                 d.rect(40, 70, 26, 40, 5, PANEL);
-                d.rect(47, if c[0] == 1 { 76 } else { 92 }, 12, 12, 3, if c[0] == 1 { GREEN } else { DIM });
+                d.rect(
+                    47,
+                    if c[0] == 1 { 76 } else { 92 },
+                    12,
+                    12,
+                    3,
+                    if c[0] == 1 { GREEN } else { DIM },
+                );
                 d.line(200, 0, 200, 50, 2, DIM);
                 d.lamp(200, 68, 20, ON, self.on(0));
                 d.text(200, 128, 26, FG, if self.on(0) { "🙂" } else { "😴" });
@@ -388,7 +545,13 @@ impl World for Stim {
             Kind::Council => {
                 for k in 0..3 {
                     d.text(70 + k * 60, 70, 30, FG, "🧑‍⚖️");
-                    d.text(70 + k * 60, 110, 22, FG, if c[k as usize] == 1 { "👍" } else { "👎" });
+                    d.text(
+                        70 + k * 60,
+                        110,
+                        22,
+                        FG,
+                        if c[k as usize] == 1 { "👍" } else { "👎" },
+                    );
                 }
                 d.text(262, 96, 40, FG, if self.on(0) { "✅" } else { "❌" });
             }
@@ -399,7 +562,11 @@ impl World for Stim {
                 d.text(120, 92, 16, ON, format!("${}", c[1]));
                 d.text(85, 132, 22, FG, "🛒");
                 d.rect(200, 50, 90, 60, 6, PANEL);
-                let shown = if self.last[0].known { self.last[0].val.to_string() } else { "??".into() };
+                let shown = if self.last[0].known {
+                    self.last[0].val.to_string()
+                } else {
+                    "??".into()
+                };
                 d.text(245, 90, 30, GREEN, shown);
             }
             Kind::Lock => {
@@ -417,16 +584,31 @@ impl World for Stim {
                         d.beam(x, 124, 160, 44, if k == 0 { BLUE } else { GREEN });
                     }
                 }
-                d.text(160, 172, 12, FG, format!("💥 {}", self.done(|s| s.set == [(0, 1)])));
+                d.text(
+                    160,
+                    172,
+                    12,
+                    FG,
+                    format!("💥 {}", self.done(|s| s.set == [(0, 1)])),
+                );
             }
             Kind::Factory => {
                 d.rect(20, 110, 280, 10, 3, if self.on(1) { RED } else { DIM });
-                let passed = self.script[..self.i.min(self.script.len())].iter().rev().take_while(|s| s.set != [(1, 0)]).filter(|s| s.set == [(0, 1)]).count() as i32;
+                let passed = self.script[..self.i.min(self.script.len())]
+                    .iter()
+                    .rev()
+                    .take_while(|s| s.set != [(1, 0)])
+                    .filter(|s| s.set == [(0, 1)])
+                    .count() as i32;
                 for k in 0..passed.min(10) {
                     d.text(288 - k * 24, 104, 16, FG, "📦");
                 }
                 d.rect(120, 30, 80, 44, 6, PANEL);
-                let shown = if self.last[0].known { self.last[0].val.to_string() } else { "??".into() };
+                let shown = if self.last[0].known {
+                    self.last[0].val.to_string()
+                } else {
+                    "??".into()
+                };
                 d.text(160, 62, 28, GREEN, shown);
                 d.text(40, 172, 14, FG, if self.on(1) { "🛑" } else { "⚙️" });
             }
@@ -462,8 +644,26 @@ impl World for Stim {
                 if self.on(0) {
                     d.beam(60, 90, 260, 90, RED);
                 }
-                d.text(45, 56, 18, ON, char::from_u32(c[0] as u32).filter(|ch| ch.is_ascii_graphic()).map(String::from).unwrap_or(format!("{:02X}", c[0])));
-                let got: String = self.script[..self.i.min(self.script.len())].iter().rev().take_while(|s| s.set.first() != Some(&(0, c[0]))).filter(|s| !s.exp.is_empty()).map(|s| if s.exp[0].1 == 1 { '1' } else { '0' }).collect::<Vec<_>>().into_iter().rev().collect();
+                d.text(
+                    45,
+                    56,
+                    18,
+                    ON,
+                    char::from_u32(c[0] as u32)
+                        .filter(|ch| ch.is_ascii_graphic())
+                        .map(String::from)
+                        .unwrap_or(format!("{:02X}", c[0])),
+                );
+                let got: String = self.script[..self.i.min(self.script.len())]
+                    .iter()
+                    .rev()
+                    .take_while(|s| s.set.first() != Some(&(0, c[0])))
+                    .filter(|s| !s.exp.is_empty())
+                    .map(|s| if s.exp[0].1 == 1 { '1' } else { '0' })
+                    .collect::<Vec<_>>()
+                    .into_iter()
+                    .rev()
+                    .collect();
                 d.text(160, 140, 14, GREEN, got);
                 d.text(275, 56, 18, FG, "📡");
             }
@@ -471,9 +671,31 @@ impl World for Stim {
                 let pads = [RED, GREEN, BLUE, ON];
                 for k in 0..4usize {
                     let (x, y) = (60 + (k as i32 % 2) * 50, 46 + (k as i32 / 2) * 50);
-                    d.rect(x, y, 44, 44, 8, if c[1] == 1 && c[0] == k as u64 { pads[k] } else { DIM });
+                    d.rect(
+                        x,
+                        y,
+                        44,
+                        44,
+                        8,
+                        if c[1] == 1 && c[0] == k as u64 {
+                            pads[k]
+                        } else {
+                            DIM
+                        },
+                    );
                     let (x2, y2) = (x + 150, y);
-                    d.rect(x2, y2, 44, 44, 8, if self.last[0].known && self.last[0].val == k as u64 { pads[k] } else { DIM });
+                    d.rect(
+                        x2,
+                        y2,
+                        44,
+                        44,
+                        8,
+                        if self.last[0].known && self.last[0].val == k as u64 {
+                            pads[k]
+                        } else {
+                            DIM
+                        },
+                    );
                 }
                 d.text(107, 172, 12, FG, "🎵");
                 d.text(257, 172, 12, FG, "🤖");

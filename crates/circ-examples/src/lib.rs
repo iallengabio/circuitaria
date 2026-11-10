@@ -13,14 +13,49 @@ pub struct Example {
 }
 
 pub fn all() -> Vec<Example> {
-    let e = |id, title_pt, title_en, project| Example { id, title_pt, title_en, project };
+    let e = |id, title_pt, title_en, project| Example {
+        id,
+        title_pt,
+        title_en,
+        project,
+    };
     vec![
-        e("latch-sr", "Latch SR com NANDs", "SR latch from NANDs", sr_latch()),
-        e("contador-ripple", "Contador ripple de 4 bits", "4-bit ripple counter", ripple_counter()),
-        e("somador-8-bits", "Somador de 8 bits (CIs aninhados)", "8-bit adder (nested ICs)", adder8().0),
-        e("serializador", "Serializador / deserializador", "Serializer / deserializer", serializer()),
-        e("tela-de-pixels", "Desenhando na tela de pixels", "Drawing on the pixel display", pixel_demo()),
-        e("cpu-8-bits", "CPU de 8 bits (estilo SAP-1)", "8-bit CPU (SAP-1 style)", cpu8().0),
+        e(
+            "latch-sr",
+            "Latch SR com NANDs",
+            "SR latch from NANDs",
+            sr_latch(),
+        ),
+        e(
+            "contador-ripple",
+            "Contador ripple de 4 bits",
+            "4-bit ripple counter",
+            ripple_counter(),
+        ),
+        e(
+            "somador-8-bits",
+            "Somador de 8 bits (CIs aninhados)",
+            "8-bit adder (nested ICs)",
+            adder8().0,
+        ),
+        e(
+            "serializador",
+            "Serializador / deserializador",
+            "Serializer / deserializer",
+            serializer(),
+        ),
+        e(
+            "tela-de-pixels",
+            "Desenhando na tela de pixels",
+            "Drawing on the pixel display",
+            pixel_demo(),
+        ),
+        e(
+            "cpu-8-bits",
+            "CPU de 8 bits (estilo SAP-1)",
+            "8-bit CPU (SAP-1 style)",
+            cpu8().0,
+        ),
     ]
 }
 
@@ -33,9 +68,15 @@ fn project(name: &str, main: MB) -> Project {
 
 pub fn sr_latch() -> Project {
     let mut b = MB::new("main");
-    let (s, r) = (b.add("switch", json!({"on": true})), b.add("switch", json!({"on": true})));
+    let (s, r) = (
+        b.add("switch", json!({"on": true})),
+        b.add("switch", json!({"on": true})),
+    );
     let (g1, g2) = (b.add("nand", json!({})), b.add("nand", json!({})));
-    let (q, nq) = (b.add("led", json!({"color": "green"})), b.add("led", json!({"color": "red"})));
+    let (q, nq) = (
+        b.add("led", json!({"color": "green"})),
+        b.add("led", json!({"color": "red"})),
+    );
     b.wire((s, "y"), (g1, "i0"));
     b.wire((g2, "y"), (g1, "i1"));
     b.wire((g1, "y"), (g2, "i0"));
@@ -76,8 +117,14 @@ pub fn ripple_counter() -> Project {
 pub fn adder8() -> (Project, Id, Id, Id) {
     let mut p = Project::new("Somador de 8 bits");
     let mut h = MB::new("Meio-somador");
-    let (a, b_) = (h.add("pin_in", json!({"name": "a"})), h.add("pin_in", json!({"name": "b"})));
-    let (s, c) = (h.add("pin_out", json!({"name": "s"})), h.add("pin_out", json!({"name": "c"})));
+    let (a, b_) = (
+        h.add("pin_in", json!({"name": "a"})),
+        h.add("pin_in", json!({"name": "b"})),
+    );
+    let (s, c) = (
+        h.add("pin_out", json!({"name": "s"})),
+        h.add("pin_out", json!({"name": "c"})),
+    );
     let x = h.gate("xor", &[(a, "y"), (b_, "y")]);
     let n = h.gate("and", &[(a, "y"), (b_, "y")]);
     h.wire(x, (s, "a"));
@@ -89,8 +136,15 @@ pub fn adder8() -> (Project, Id, Id, Id) {
     let hp = [a, b_, s, c].map(ic_pin);
 
     let mut f = MB::new("Somador completo");
-    let (fa, fb, fc) = (f.add("pin_in", json!({"name": "a"})), f.add("pin_in", json!({"name": "b"})), f.add("pin_in", json!({"name": "cin"})));
-    let (fs, fco) = (f.add("pin_out", json!({"name": "s"})), f.add("pin_out", json!({"name": "cout"})));
+    let (fa, fb, fc) = (
+        f.add("pin_in", json!({"name": "a"})),
+        f.add("pin_in", json!({"name": "b"})),
+        f.add("pin_in", json!({"name": "cin"})),
+    );
+    let (fs, fco) = (
+        f.add("pin_out", json!({"name": "s"})),
+        f.add("pin_out", json!({"name": "cout"})),
+    );
     let (h1, h2) = (f.ic("half"), f.ic("half"));
     f.wire((fa, "y"), (h1, &hp[0]));
     f.wire((fb, "y"), (h1, &hp[1]));
@@ -106,8 +160,14 @@ pub fn adder8() -> (Project, Id, Id, Id) {
     let fp = [fa, fb, fc, fs, fco].map(ic_pin);
 
     let mut m = MB::new("main");
-    let (a, b_) = (m.add("number_in", json!({"width": 8, "value": 100})), m.add("number_in", json!({"width": 8, "value": 23})));
-    let (sa, sb) = (m.add("splitter", json!({"width": 8})), m.add("splitter", json!({"width": 8})));
+    let (a, b_) = (
+        m.add("number_in", json!({"width": 8, "value": 100})),
+        m.add("number_in", json!({"width": 8, "value": 23})),
+    );
+    let (sa, sb) = (
+        m.add("splitter", json!({"width": 8})),
+        m.add("splitter", json!({"width": 8})),
+    );
     let mg = m.add("merger", json!({"width": 9}));
     let out = m.add("number_out", json!({"width": 9}));
     m.wire((a, "y"), (sa, "a"));
@@ -137,7 +197,10 @@ pub fn serializer() -> Project {
     let send = b.add("button", json!({}));
     let tx = b.add("shiftreg", json!({"width": 8}));
     let rx = b.add("shiftreg", json!({"width": 8}));
-    let (line, out) = (b.add("led", json!({"color": "yellow"})), b.add("number_out", json!({"width": 8, "base": "hex"})));
+    let (line, out) = (
+        b.add("led", json!({"color": "yellow"})),
+        b.add("number_out", json!({"width": 8, "base": "hex"})),
+    );
     b.wire((clk, "y"), (tx, "clk"));
     b.wire((clk, "y"), (rx, "clk"));
     b.wire((data, "y"), (tx, "d"));
@@ -152,7 +215,10 @@ pub fn pixel_demo() -> Project {
     let mut b = MB::new("main");
     let clk = b.add("clock", json!({"half": 1}));
     let cnt = b.add("counter", json!({"width": 10}));
-    let (x, y) = (b.add("slice", json!({"width": 10, "lo": 0, "out": 5})), b.add("slice", json!({"width": 10, "lo": 5, "out": 5})));
+    let (x, y) = (
+        b.add("slice", json!({"width": 10, "lo": 0, "out": 5})),
+        b.add("slice", json!({"width": 10, "lo": 5, "out": 5})),
+    );
     let xor = b.gate_w("xor", 5, &[(x, "y"), (y, "y")]);
     let col = b.add("slice", json!({"width": 5, "lo": 1, "out": 4}));
     let px = b.add("pixels", json!({}));
@@ -201,7 +267,12 @@ pub const OP_HLT: u8 = 15;
 fn microcode() -> Vec<u64> {
     let mut rom = vec![0u64; 512];
     for (addr, word) in rom.iter_mut().enumerate() {
-        let (step, op, cf, zf) = (addr & 7, ((addr >> 3) & 15) as u8, addr >> 7 & 1 == 1, addr >> 8 & 1 == 1);
+        let (step, op, cf, zf) = (
+            addr & 7,
+            ((addr >> 3) & 15) as u8,
+            addr >> 7 & 1 == 1,
+            addr >> 8 & 1 == 1,
+        );
         let w: u16 = match (step, op) {
             (0, _) => CO | MI,
             (1, _) => RO | II | CE,
@@ -228,7 +299,15 @@ fn microcode() -> Vec<u64> {
 pub fn cpu_program() -> Vec<u64> {
     let i = |op: u8, arg: u8| ((op << 4) | arg) as u64;
     let mut ram = vec![0u64; 16];
-    let prog = [i(OP_LDA, 15), i(OP_ADD, 14), i(OP_OUT, 0), i(OP_STA, 15), i(OP_JC, 6), i(OP_JMP, 0), i(OP_HLT, 0)];
+    let prog = [
+        i(OP_LDA, 15),
+        i(OP_ADD, 14),
+        i(OP_OUT, 0),
+        i(OP_STA, 15),
+        i(OP_JC, 6),
+        i(OP_JMP, 0),
+        i(OP_HLT, 0),
+    ];
     ram[..prog.len()].copy_from_slice(&prog);
     ram[14] = 3;
     ram[15] = 0;
@@ -244,7 +323,10 @@ pub fn cpu8() -> (Project, Id, Id) {
     b.col(540, 20);
     let bus = b.add("junction", json!({}));
     b.col(60, 140);
-    let rom = b.add("rom", json!({"addrBits": 9, "width": 16, "data": microcode()}));
+    let rom = b.add(
+        "rom",
+        json!({"addrBits": 9, "width": 16, "data": microcode()}),
+    );
     let ctl = b.add("splitter", json!({"width": 16}));
     b.wire((rom, "d"), (ctl, "a"));
     let c = |bit: u16| -> String { format!("b{}", bit.trailing_zeros()) };
@@ -288,7 +370,10 @@ pub fn cpu8() -> (Project, Id, Id) {
     b.col(960, 60);
     // Memory.
     let mar = reg(&mut b, 4, (low, "y"), MI);
-    let ram = b.add("ram", json!({"addrBits": 4, "width": 8, "data": cpu_program()}));
+    let ram = b.add(
+        "ram",
+        json!({"addrBits": 4, "width": 8, "data": cpu_program()}),
+    );
     b.wire((mar, "q"), (ram, "addr"));
     b.wire((bus, "p"), (ram, "din"));
     b.wire((ctl, &c(RI)), (ram, "we"));
@@ -298,7 +383,10 @@ pub fn cpu8() -> (Project, Id, Id) {
     b.col(1160, 60);
     // Instruction register: high nibble = opcode, low nibble = operand.
     let ir = reg(&mut b, 8, (bus, "p"), II);
-    let (opc, arg) = (b.add("slice", json!({"width": 8, "lo": 4, "out": 4})), b.add("slice", json!({"width": 8, "lo": 0, "out": 4})));
+    let (opc, arg) = (
+        b.add("slice", json!({"width": 8, "lo": 4, "out": 4})),
+        b.add("slice", json!({"width": 8, "lo": 0, "out": 4})),
+    );
     b.wire((ir, "q"), (opc, "a"));
     b.wire((ir, "q"), (arg, "a"));
     let arg8 = widen(&mut b, (arg, "y"));
@@ -407,7 +495,10 @@ mod tests {
         let mut sim = Sim::new(nl);
         let net = sim.nl.pin_net(&p, "", out, "a").unwrap();
         assert_eq!(sim.get(net), Some(123));
-        let (ga, gb) = (sim.nl.gate_of("", a).unwrap(), sim.nl.gate_of("", b).unwrap());
+        let (ga, gb) = (
+            sim.nl.gate_of("", a).unwrap(),
+            sim.nl.gate_of("", b).unwrap(),
+        );
         sim.set_input(ga, 255);
         sim.set_input(gb, 255);
         sim.settle();
@@ -419,7 +510,10 @@ mod tests {
         let (p, disp, halt) = cpu8();
         let nl = compile(&p);
         let mut sim = Sim::new(nl);
-        let (out, hlt) = (sim.nl.pin_net(&p, "", disp, "a").unwrap(), sim.nl.pin_net(&p, "", halt, "a").unwrap());
+        let (out, hlt) = (
+            sim.nl.pin_net(&p, "", disp, "a").unwrap(),
+            sim.nl.pin_net(&p, "", halt, "a").unwrap(),
+        );
         let mut seen = vec![];
         for _ in 0..20_000 {
             sim.tick();

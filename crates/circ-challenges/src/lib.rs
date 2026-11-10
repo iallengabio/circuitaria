@@ -83,9 +83,34 @@ pub struct Driver {
 impl Driver {
     pub fn new(kind: &str, nl: &Netlist) -> Result<Driver, String> {
         let world = circ_world::make(kind).ok_or("unknown_world")?;
-        let in_gates = world.inputs().iter().map(|p| nl.ports_in.get(p.name).copied().ok_or(format!("missing_port|{}", p.name))).collect::<Result<Vec<_>, _>>()?;
-        let out_nets = world.outputs().iter().map(|p| nl.ports_out.get(p.name).copied().ok_or(format!("missing_port|{}", p.name))).collect::<Result<Vec<_>, _>>()?;
-        Ok(Driver { sig: vec![Sig::default(); out_nets.len()], inp: vec![0; in_gates.len()], world, in_gates, out_nets, steps: 0 })
+        let in_gates = world
+            .inputs()
+            .iter()
+            .map(|p| {
+                nl.ports_in
+                    .get(p.name)
+                    .copied()
+                    .ok_or(format!("missing_port|{}", p.name))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let out_nets = world
+            .outputs()
+            .iter()
+            .map(|p| {
+                nl.ports_out
+                    .get(p.name)
+                    .copied()
+                    .ok_or(format!("missing_port|{}", p.name))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(Driver {
+            sig: vec![Sig::default(); out_nets.len()],
+            inp: vec![0; in_gates.len()],
+            world,
+            in_gates,
+            out_nets,
+            steps: 0,
+        })
     }
 
     pub fn reset(&mut self, scenario: usize) {
@@ -97,7 +122,10 @@ impl Driver {
     pub fn step(&mut self, sim: &mut Sim) -> Status {
         for (s, n) in self.sig.iter_mut().zip(&self.out_nets) {
             let v = sim.get(*n);
-            *s = Sig { val: v.unwrap_or(0), known: v.is_some() };
+            *s = Sig {
+                val: v.unwrap_or(0),
+                known: v.is_some(),
+            };
         }
         self.world.step(&self.sig, &mut self.inp);
         for (g, v) in self.in_gates.iter().zip(&self.inp) {
@@ -142,12 +170,21 @@ pub struct Report {
 /// Runs the player's circuit headless against every scenario and scores it.
 pub fn verify(p: &Project, ch: &Challenge) -> Report {
     let nl = compile(p);
-    let mut rep = Report { parts: nl.parts, par: ch.par, ..Default::default() };
+    let mut rep = Report {
+        parts: nl.parts,
+        par: ch.par,
+        ..Default::default()
+    };
     if let Some(d) = nl.diags.iter().find(|d| d.level == "error") {
         rep.error = format!("compile|{}", d.code);
         return rep;
     }
-    rep.illegal = nl.kinds.keys().filter(|k| catalog::PART_KINDS.contains(&k.as_str()) && !ch.allowed.contains(k)).cloned().collect();
+    rep.illegal = nl
+        .kinds
+        .keys()
+        .filter(|k| catalog::PART_KINDS.contains(&k.as_str()) && !ch.allowed.contains(k))
+        .cloned()
+        .collect();
     let mut driver = match Driver::new(&ch.kind, &nl) {
         Ok(d) => d,
         Err(e) => {
@@ -167,7 +204,14 @@ pub fn verify(p: &Project, ch: &Challenge) -> Report {
             Status::Lost { code, detail } => (code.to_string(), detail),
             Status::Running => ("timeout".to_string(), String::new()),
         };
-        rep.scenarios.push(ScenarioResult { key: sc.key, hidden: sc.hidden, passed: code.is_empty(), code, detail, steps: driver.steps });
+        rep.scenarios.push(ScenarioResult {
+            key: sc.key,
+            hidden: sc.hidden,
+            passed: code.is_empty(),
+            code,
+            detail,
+            steps: driver.steps,
+        });
     }
     rep.ok = rep.illegal.is_empty() && rep.scenarios.iter().all(|s| s.passed);
     if rep.ok {

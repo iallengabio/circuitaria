@@ -15,3 +15,6 @@ circ-examples.workspace = true
 
 [features]
 solutions = []
+
+[lints]
+workspace = true

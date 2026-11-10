@@ -16,13 +16,31 @@ pub struct MB {
 
 impl MB {
     pub fn new(name: &str) -> Self {
-        MB { m: Module { name: name.into(), ..Default::default() }, next: 1, flow: None }
+        MB {
+            m: Module {
+                name: name.into(),
+                ..Default::default()
+            },
+            next: 1,
+            flow: None,
+        }
     }
 
     /// Continue building on top of an existing module (e.g. a challenge board).
     pub fn from_module(m: Module) -> Self {
-        let next = m.components.iter().map(|c| c.id).chain(m.wires.iter().map(|w| w.id)).max().unwrap_or(0) + 1;
-        MB { m, next, flow: None }
+        let next = m
+            .components
+            .iter()
+            .map(|c| c.id)
+            .chain(m.wires.iter().map(|w| w.id))
+            .max()
+            .unwrap_or(0)
+            + 1;
+        MB {
+            m,
+            next,
+            flow: None,
+        }
     }
 
     fn id(&mut self) -> Id {
@@ -39,10 +57,24 @@ impl MB {
         let (mut x, mut y) = (0, 0);
         if let Some((fx, fy)) = self.flow {
             (x, y) = (fx, fy);
-            let rows = catalog::pins(kind, &params).map(|p| p.iter().filter(|d| d.dir == catalog::Dir::In).count().max(p.iter().filter(|d| d.dir == catalog::Dir::Out).count())).unwrap_or(3);
+            let rows = catalog::pins(kind, &params)
+                .map(|p| {
+                    p.iter()
+                        .filter(|d| d.dir == catalog::Dir::In)
+                        .count()
+                        .max(p.iter().filter(|d| d.dir == catalog::Dir::Out).count())
+                })
+                .unwrap_or(3);
             self.flow = Some((fx, fy + (rows as i32 * 20).max(40) + 20));
         }
-        self.m.components.push(Component { id, kind: kind.into(), x, y, rot: 0, params });
+        self.m.components.push(Component {
+            id,
+            kind: kind.into(),
+            x,
+            y,
+            rot: 0,
+            params,
+        });
         id
     }
 
@@ -53,7 +85,17 @@ impl MB {
 
     pub fn wire(&mut self, a: Pin, b: Pin) {
         let id = self.id();
-        self.m.wires.push(Wire { id, a: PinRef { c: a.0, p: a.1.into() }, b: PinRef { c: b.0, p: b.1.into() } });
+        self.m.wires.push(Wire {
+            id,
+            a: PinRef {
+                c: a.0,
+                p: a.1.into(),
+            },
+            b: PinRef {
+                c: b.0,
+                p: b.1.into(),
+            },
+        });
     }
 
     /// N-ary 1-bit gate with its inputs wired; returns the output pin.
@@ -63,9 +105,16 @@ impl MB {
 
     pub fn gate_w(&mut self, kind: &str, width: u8, ins: &[Pin]) -> Pin<'static> {
         let unary = kind == "not" || kind == "buf";
-        let g = self.add(kind, serde_json::json!({"inputs": ins.len().max(2), "width": width}));
+        let g = self.add(
+            kind,
+            serde_json::json!({"inputs": ins.len().max(2), "width": width}),
+        );
         for (k, p) in ins.iter().enumerate() {
-            let name = if unary { "a".to_string() } else { format!("i{k}") };
+            let name = if unary {
+                "a".to_string()
+            } else {
+                format!("i{k}")
+            };
             self.wire(*p, (g, &name));
         }
         (g, "y")
@@ -102,14 +151,35 @@ pub fn ic_pin(inner: Id) -> String {
     format!("p{inner}")
 }
 
-const SOURCES: &[&str] = &["switch", "button", "number_in", "clock", "pin_in", "port_in"];
-const SINKS: &[&str] = &["led", "seg7", "number_out", "pin_out", "port_out", "buzzer", "pixels", "terminal"];
+const SOURCES: &[&str] = &[
+    "switch",
+    "button",
+    "number_in",
+    "clock",
+    "pin_in",
+    "port_in",
+];
+const SINKS: &[&str] = &[
+    "led",
+    "seg7",
+    "number_out",
+    "pin_out",
+    "port_out",
+    "buzzer",
+    "pixels",
+    "terminal",
+];
 
 /// Columns by signal depth (feedback edges ignored), rows stacked per column.
 /// Components that already have a position (x or y non-zero) are kept.
 pub fn auto_layout(m: &mut Module) {
     let n = m.components.len();
-    let index: HashMap<Id, usize> = m.components.iter().enumerate().map(|(k, c)| (c.id, k)).collect();
+    let index: HashMap<Id, usize> = m
+        .components
+        .iter()
+        .enumerate()
+        .map(|(k, c)| (c.id, k))
+        .collect();
     let mut succ: Vec<Vec<usize>> = vec![vec![]; n];
     for w in &m.wires {
         if let (Some(&a), Some(&b)) = (index.get(&w.a.c), index.get(&w.b.c)) {

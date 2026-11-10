@@ -121,9 +121,11 @@ pub extern "C" fn eval_count() -> f64 {
 /// Memory words of a RAM/ROM/pixel/terminal gate (null if none).
 #[no_mangle]
 pub extern "C" fn mem_ptr(gate: u32) -> *const u64 {
-    with_sim(std::ptr::null(), |sim| match sim.nl.gates.get(gate as usize) {
-        Some(g) if g.mem != NONE => sim.mems[g.mem as usize].as_ptr(),
-        _ => std::ptr::null(),
+    with_sim(std::ptr::null(), |sim| {
+        match sim.nl.gates.get(gate as usize) {
+            Some(g) if g.mem != NONE => sim.mems[g.mem as usize].as_ptr(),
+            _ => std::ptr::null(),
+        }
     })
 }
 #[no_mangle]
@@ -147,7 +149,9 @@ pub extern "C" fn gate_state(gate: u32) -> f64 {
 pub extern "C" fn bench_random(ticks: u32) -> f64 {
     ST.with(|s| {
         let s = &mut *s.borrow_mut();
-        let (Some(sim), ins) = (s.sim.as_mut(), &s.bench_inputs) else { return 0.0 };
+        let (Some(sim), ins) = (s.sim.as_mut(), &s.bench_inputs) else {
+            return 0.0;
+        };
         let mut rng = 0x1234_5678_9abc_def1u64;
         sim.evals = 0;
         for _ in 0..ticks {
@@ -176,7 +180,8 @@ fn dispatch(input: &str) -> String {
         Err(e) => return json!({"error": format!("bad_json: {e}")}).to_string(),
     };
     let cmd = v["cmd"].as_str().unwrap_or("");
-    ST.with(|s| command(&mut s.borrow_mut(), cmd, &v)).to_string()
+    ST.with(|s| command(&mut s.borrow_mut(), cmd, &v))
+        .to_string()
 }
 
 fn load(s: &mut St, p: Project, keep: bool) -> Value {
@@ -197,15 +202,23 @@ fn command(s: &mut St, cmd: &str, v: &Value) -> Value {
     match cmd {
         "catalog" => catalog::catalog(),
         "pins" => {
-            let params = v["params"].as_object().map(|o| o.clone().into_iter().collect()).unwrap_or_default();
+            let params = v["params"]
+                .as_object()
+                .map(|o| o.clone().into_iter().collect())
+                .unwrap_or_default();
             json!(catalog::pins(v["kind"].as_str().unwrap_or(""), &params))
         }
-        "load" => match serde_json::to_string(&v["project"]).map_err(|e| e.to_string()).and_then(|j| Project::from_json(&j)) {
+        "load" => match serde_json::to_string(&v["project"])
+            .map_err(|e| e.to_string())
+            .and_then(|j| Project::from_json(&j))
+        {
             Ok(p) => load(s, p, v["keep"].as_bool().unwrap_or(false)),
             Err(e) => json!({"ok": false, "error": e}),
         },
         "view" => {
-            let (Some(sim), Some(p)) = (&s.sim, &s.project) else { return json!([]) };
+            let (Some(sim), Some(p)) = (&s.sim, &s.project) else {
+                return json!([]);
+            };
             let path = v["path"].as_str().unwrap_or("");
             if module_at(p, path).is_none() {
                 return json!([]);
@@ -222,7 +235,9 @@ fn command(s: &mut St, cmd: &str, v: &Value) -> Value {
             json!(widths)
         }
         "probe" => {
-            let Some(sim) = s.sim.as_mut() else { return json!(null) };
+            let Some(sim) = s.sim.as_mut() else {
+                return json!(null);
+            };
             sim.probes.clear();
             for n in v["nets"].as_array().into_iter().flatten() {
                 if let Some(n) = n.as_u64().filter(|n| (*n as usize) < sim.val.len()) {
@@ -241,7 +256,9 @@ fn command(s: &mut St, cmd: &str, v: &Value) -> Value {
                 .collect::<Vec<_>>())
         }
         "rewind" => {
-            let Some(sim) = s.sim.as_mut() else { return json!(null) };
+            let Some(sim) = s.sim.as_mut() else {
+                return json!(null);
+            };
             let mut last = None;
             for _ in 0..v["steps"].as_u64().unwrap_or(1) {
                 match s.history.pop_back() {
@@ -263,7 +280,10 @@ fn command(s: &mut St, cmd: &str, v: &Value) -> Value {
             None => Value::Null,
         },
         "ch_start" => {
-            let (Some(ch), Some(p)) = (circ_challenges::find(v["id"].as_str().unwrap_or("")), s.project.clone()) else {
+            let (Some(ch), Some(p)) = (
+                circ_challenges::find(v["id"].as_str().unwrap_or("")),
+                s.project.clone(),
+            ) else {
                 return json!({"ok": false, "error": "no_challenge"});
             };
             let nl = compile(&p);
@@ -283,7 +303,9 @@ fn command(s: &mut St, cmd: &str, v: &Value) -> Value {
             }
         }
         "ch_step" => {
-            let (Some(d), Some(sim)) = (s.driver.as_mut(), s.sim.as_mut()) else { return json!(null) };
+            let (Some(d), Some(sim)) = (s.driver.as_mut(), s.sim.as_mut()) else {
+                return json!(null);
+            };
             let mut status = d.world.status();
             for _ in 0..v["n"].as_u64().unwrap_or(1) {
                 if status != circ_world_status_running() {
@@ -298,15 +320,22 @@ fn command(s: &mut St, cmd: &str, v: &Value) -> Value {
             json!(true)
         }
         "ch_preview" => {
-            let Some(ch) = circ_challenges::find(v["id"].as_str().unwrap_or("")) else { return json!(null) };
+            let Some(ch) = circ_challenges::find(v["id"].as_str().unwrap_or("")) else {
+                return json!(null);
+            };
             let nl = compile(&circ_challenges::template(&ch));
             match Driver::new(&ch.kind, &nl) {
                 Ok(d) => json!({"shapes": d.draw().0, "scenarios": d.world.scenarios()}),
                 Err(_) => json!(null),
             }
         }
-        "ch_verify" => match (circ_challenges::find(v["id"].as_str().unwrap_or("")), &s.project) {
-            (Some(ch), Some(p)) => serde_json::to_value(circ_challenges::verify(p, &ch)).unwrap_or(Value::Null),
+        "ch_verify" => match (
+            circ_challenges::find(v["id"].as_str().unwrap_or("")),
+            &s.project,
+        ) {
+            (Some(ch), Some(p)) => {
+                serde_json::to_value(circ_challenges::verify(p, &ch)).unwrap_or(Value::Null)
+            }
             _ => Value::Null,
         },
         "hash" => json!(format!("{:016x}", circ_challenges::selftest_hash())),
@@ -316,7 +345,10 @@ fn command(s: &mut St, cmd: &str, v: &Value) -> Value {
                 let (mut p, _, _) = circ_examples::cpu8();
                 for c in &mut p.modules.get_mut("main").unwrap().components {
                     if c.kind == "ram" {
-                        c.params.insert("data".into(), json!([0x2e, 0xe0, 0x60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]));
+                        c.params.insert(
+                            "data".into(),
+                            json!([0x2e, 0xe0, 0x60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]),
+                        );
                     }
                 }
                 load(s, p, false)
@@ -354,27 +386,45 @@ mod tests {
         let p = alloc(16);
         // SAFETY: freshly allocated with the same length.
         unsafe { dealloc(p, 16) };
-        assert!(call_json(json!({"cmd": "catalog"})).as_array().unwrap().len() > 30);
+        assert!(
+            call_json(json!({"cmd": "catalog"}))
+                .as_array()
+                .unwrap()
+                .len()
+                > 30
+        );
         let ex = circ_examples::ripple_counter();
         let info = call_json(json!({"cmd": "load", "project": ex}));
         assert_eq!(info["ok"], true, "{info}");
         run(64);
         assert_eq!(tick_count(), 64.0);
         let view = call_json(json!({"cmd": "view", "path": ""}));
-        assert_eq!(view.as_array().unwrap().len(), ex.modules["main"].components.len());
+        assert_eq!(
+            view.as_array().unwrap().len(),
+            ex.modules["main"].components.len()
+        );
         assert_eq!(call_json(json!({"cmd": "rewind", "steps": 1}))["tick"], 0);
         assert!(!val_ptr().is_null() && net_count() > 0);
-        assert_eq!(call_json(json!({"cmd": "nope"}))["error"], "unknown_cmd: nope");
+        assert_eq!(
+            call_json(json!({"cmd": "nope"}))["error"],
+            "unknown_cmd: nope"
+        );
     }
 
     #[test]
     fn challenge_session() {
         let t = call_json(json!({"cmd": "template", "id": "w1-l01-lampada"}));
         assert_eq!(call_json(json!({"cmd": "load", "project": t}))["ok"], true);
-        assert_eq!(call_json(json!({"cmd": "ch_start", "id": "w1-l01-lampada", "scenario": 0}))["ok"], true);
+        assert_eq!(
+            call_json(json!({"cmd": "ch_start", "id": "w1-l01-lampada", "scenario": 0}))["ok"],
+            true
+        );
         let r = call_json(json!({"cmd": "ch_step", "n": 50}));
         assert_eq!(r["status"]["state"], "lost");
         assert!(r["shapes"].as_array().unwrap().len() > 3);
-        assert_eq!(call_json(json!({"cmd": "ch_verify", "id": "w1-l01-lampada"}))["ok"], false);
+        assert_eq!(
+            call_json(json!({"cmd": "ch_verify", "id": "w1-l01-lampada"}))["ok"],
+            false
+        );
     }
 }

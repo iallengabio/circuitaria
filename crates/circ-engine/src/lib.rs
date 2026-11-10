@@ -82,7 +82,16 @@ pub struct Sim {
 }
 
 #[inline(always)]
-fn write_net(nl: &Netlist, val: &mut [u64], flag: &mut [u64], frozen: &[bool], sc: &mut Sched, n: u32, v: u64, f: u64) {
+fn write_net(
+    nl: &Netlist,
+    val: &mut [u64],
+    flag: &mut [u64],
+    frozen: &[bool],
+    sc: &mut Sched,
+    n: u32,
+    v: u64,
+    f: u64,
+) {
     let nu = n as usize;
     if (val[nu] == v && flag[nu] == f) || frozen[nu] {
         return;
@@ -142,10 +151,16 @@ impl Sim {
         };
         if let Some(old) = old {
             s.tick = old.tick;
-            let prev: HashMap<(&str, u64), &circ_compile::DebugComp> =
-                old.nl.debug.iter().map(|d| ((old.nl.paths[d.path as usize].as_str(), d.id), d)).collect();
+            let prev: HashMap<(&str, u64), &circ_compile::DebugComp> = old
+                .nl
+                .debug
+                .iter()
+                .map(|d| ((old.nl.paths[d.path as usize].as_str(), d.id), d))
+                .collect();
             for d in &s.nl.debug {
-                let Some(o) = prev.get(&(s.nl.paths[d.path as usize].as_str(), d.id)) else { continue };
+                let Some(o) = prev.get(&(s.nl.paths[d.path as usize].as_str(), d.id)) else {
+                    continue;
+                };
                 if o.pin_len == d.pin_len {
                     for (a, b) in s.nl.pins_of(d).iter().zip(old.nl.pins_of(o)) {
                         if s.nl.net_width[*a as usize] == old.nl.net_width[*b as usize] {
@@ -166,7 +181,10 @@ impl Sim {
                     s.state[a] = old.state[b];
                     s.state[a + 1] = old.state[b + 1];
                 }
-                if g.mem != NONE && s.mems[g.mem as usize].len() == old.mems[og.mem as usize].len() && g.op != circ_compile::Op::Rom {
+                if g.mem != NONE
+                    && s.mems[g.mem as usize].len() == old.mems[og.mem as usize].len()
+                    && g.op != circ_compile::Op::Rom
+                {
                     s.mems[g.mem as usize].copy_from_slice(&old.mems[og.mem as usize]);
                 }
             }
@@ -204,7 +222,15 @@ impl Sim {
                 for &gi in &self.cur {
                     self.sched.dirty[gi as usize] = false;
                     let g = &self.nl.gates[gi as usize];
-                    let (n, clash) = eval_gate(&self.nl, g, &self.val, &self.flag, &mut self.state, &self.mems, &mut self.obuf);
+                    let (n, clash) = eval_gate(
+                        &self.nl,
+                        g,
+                        &self.val,
+                        &self.flag,
+                        &mut self.state,
+                        &self.mems,
+                        &mut self.obuf,
+                    );
                     if clash {
                         self.events |= EV_CONTENTION;
                     }
@@ -214,14 +240,32 @@ impl Sim {
                         if g.scc {
                             self.jbuf.push((net, v, f));
                         } else {
-                            write_net(&self.nl, &mut self.val, &mut self.flag, &self.frozen, &mut self.sched, net, v, f);
+                            write_net(
+                                &self.nl,
+                                &mut self.val,
+                                &mut self.flag,
+                                &self.frozen,
+                                &mut self.sched,
+                                net,
+                                v,
+                                f,
+                            );
                         }
                     }
                 }
                 self.cur.clear();
                 for k in 0..self.jbuf.len() {
                     let (net, v, f) = self.jbuf[k];
-                    write_net(&self.nl, &mut self.val, &mut self.flag, &self.frozen, &mut self.sched, net, v, f);
+                    write_net(
+                        &self.nl,
+                        &mut self.val,
+                        &mut self.flag,
+                        &self.frozen,
+                        &mut self.sched,
+                        net,
+                        v,
+                        f,
+                    );
                 }
                 self.jbuf.clear();
                 if self.sched.queues[l].is_empty() {
@@ -239,7 +283,16 @@ impl Sim {
                         for k in 0..g.out_len as usize {
                             let net = self.nl.outs[g.out_start as usize + k];
                             let m = mask(self.nl.net_width[net as usize]);
-                            write_net(&self.nl, &mut self.val, &mut self.flag, &self.frozen, &mut self.sched, net, m, m);
+                            write_net(
+                                &self.nl,
+                                &mut self.val,
+                                &mut self.flag,
+                                &self.frozen,
+                                &mut self.sched,
+                                net,
+                                m,
+                                m,
+                            );
                             if !self.frozen[net as usize] {
                                 self.frozen[net as usize] = true;
                                 self.frozen_list.push(net);
@@ -278,7 +331,9 @@ impl Sim {
                 let rising = self.prev_clk[gu] == 0 && level == 1;
                 self.prev_clk[gu] = level;
                 if rising {
-                    if let Some(p) = sample(&self.nl, gi, &self.val, &self.flag, &self.state, &self.mems) {
+                    if let Some(p) =
+                        sample(&self.nl, gi, &self.val, &self.flag, &self.state, &self.mems)
+                    {
                         self.pending.push(p);
                     }
                 }
@@ -345,7 +400,9 @@ impl Sim {
     /// Sets an input gate (switch, button, number, port). Takes effect on the
     /// next `settle()` or `tick()`.
     pub fn set_input(&mut self, gate: u32, value: u64) {
-        let Some(g) = self.nl.gates.get(gate as usize) else { return };
+        let Some(g) = self.nl.gates.get(gate as usize) else {
+            return;
+        };
         if g.op != circ_compile::Op::Input {
             return;
         }
@@ -372,17 +429,23 @@ impl Sim {
         let n = net as usize;
         (0..self.nl.net_width[n])
             .rev()
-            .map(|b| match ((self.val[n] >> b) & 1, (self.flag[n] >> b) & 1) {
-                (0, 0) => '0',
-                (1, 0) => '1',
-                (0, _) => 'Z',
-                _ => 'X',
-            })
+            .map(
+                |b| match ((self.val[n] >> b) & 1, (self.flag[n] >> b) & 1) {
+                    (0, 0) => '0',
+                    (1, 0) => '1',
+                    (0, _) => 'Z',
+                    _ => 'X',
+                },
+            )
             .collect()
     }
 
     pub fn probe(&mut self, net: u32) -> usize {
-        self.probes.push(Probe { net, buf: vec![], head: 0 });
+        self.probes.push(Probe {
+            net,
+            buf: vec![],
+            head: 0,
+        });
         self.probes.len() - 1
     }
 
@@ -419,11 +482,27 @@ impl Sim {
         let nl = &self.nl;
         let v = |len: usize, size: usize| len * size;
         v(nl.net_width.len(), 1 + 8 + 8 + 1)
-            + v(nl.gates.len(), std::mem::size_of::<circ_compile::Gate>() + 4 + 1 + 1 + 1)
-            + v(nl.ins.len() + nl.outs.len() + nl.fan.len() + nl.clk_fan.len() + nl.fan_start.len() + nl.clk_start.len(), 4)
+            + v(
+                nl.gates.len(),
+                std::mem::size_of::<circ_compile::Gate>() + 4 + 1 + 1 + 1,
+            )
+            + v(
+                nl.ins.len()
+                    + nl.outs.len()
+                    + nl.fan.len()
+                    + nl.clk_fan.len()
+                    + nl.fan_start.len()
+                    + nl.clk_start.len(),
+                4,
+            )
             + v(self.state.len(), 8)
             + self.mems.iter().map(|m| m.len() * 8).sum::<usize>()
-            + self.sched.queues.iter().map(|q| q.capacity() * 4 + 24).sum::<usize>()
+            + self
+                .sched
+                .queues
+                .iter()
+                .map(|q| q.capacity() * 4 + 24)
+                .sum::<usize>()
     }
 
     /// FNV-1a over the full observable state (determinism checks).
@@ -434,7 +513,11 @@ impl Sim {
                 h = (h ^ b as u64).wrapping_mul(0x100000001b3);
             }
         };
-        self.val.iter().chain(&self.flag).chain(&self.state).for_each(|x| eat(*x));
+        self.val
+            .iter()
+            .chain(&self.flag)
+            .chain(&self.state)
+            .for_each(|x| eat(*x));
         self.mems.iter().flatten().for_each(|x| eat(*x));
         eat(self.tick);
         h

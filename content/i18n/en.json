@@ -75,7 +75,7 @@
  "ic.icon": "Icon",
  "ic.inside": "Inside",
  "ic.name": "Name",
- "ic.open": "Open inside (double click)",
+ "ic.open": "Open inside",
  "ic.orphan": "This IC's definition changed: orphan wires were removed.",
  "ic.root": "Main circuit",
  "ic.title": "Create integrated circuit",

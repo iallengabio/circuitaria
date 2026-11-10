@@ -39,7 +39,15 @@ const X1: L = (1, 1);
 /// Evaluates gate `g`, writing its outputs to `out`. Level-sensitive state
 /// (latches, async resets) is updated in place. Returns (outputs, contention).
 #[inline]
-pub fn eval_gate(nl: &Netlist, g: &Gate, val: &[u64], flag: &[u64], state: &mut [u64], mems: &[Vec<u64>], out: &mut [L]) -> (usize, bool) {
+pub fn eval_gate(
+    nl: &Netlist,
+    g: &Gate,
+    val: &[u64],
+    flag: &[u64],
+    state: &mut [u64],
+    mems: &[Vec<u64>],
+    out: &mut [L],
+) -> (usize, bool) {
     let m = mask(g.width);
     let ins = &nl.ins[g.in_start as usize..g.in_start as usize + g.in_len as usize];
     let iv = |k: usize| -> L {
@@ -62,7 +70,11 @@ pub fn eval_gate(nl: &Netlist, g: &Gate, val: &[u64], flag: &[u64], state: &mut 
             }
             zeros &= m;
             let unk = m & !(zeros | ones);
-            out[0] = if g.op == Op::And { (ones | unk, unk) } else { (zeros | unk, unk) };
+            out[0] = if g.op == Op::And {
+                (ones | unk, unk)
+            } else {
+                (zeros | unk, unk)
+            };
         }
         Op::Or | Op::Nor => {
             let (mut zeros, mut ones) = (m, 0u64);
@@ -73,7 +85,11 @@ pub fn eval_gate(nl: &Netlist, g: &Gate, val: &[u64], flag: &[u64], state: &mut 
             }
             ones &= m;
             let unk = m & !(zeros | ones);
-            out[0] = if g.op == Op::Or { (ones | unk, unk) } else { (zeros | unk, unk) };
+            out[0] = if g.op == Op::Or {
+                (ones | unk, unk)
+            } else {
+                (zeros | unk, unk)
+            };
         }
         Op::Xor | Op::Xnor => {
             let (mut acc, mut x) = (0u64, 0u64);
@@ -120,7 +136,11 @@ pub fn eval_gate(nl: &Netlist, g: &Gate, val: &[u64], flag: &[u64], state: &mut 
         Op::Mux => {
             let sel = iv(ins.len() - 1);
             let sm = mask(g.param as u8);
-            out[0] = if sel.1 & sm != 0 { (m, m) } else { clean(iv((sel.0 & sm) as usize), m) };
+            out[0] = if sel.1 & sm != 0 {
+                (m, m)
+            } else {
+                clean(iv((sel.0 & sm) as usize), m)
+            };
         }
         Op::Demux => {
             let n = g.out_len as usize;
@@ -142,7 +162,11 @@ pub fn eval_gate(nl: &Netlist, g: &Gate, val: &[u64], flag: &[u64], state: &mut 
             let n = g.out_len as usize;
             let a = iv(0);
             for (k, o) in out[..n].iter_mut().enumerate() {
-                *o = if a.1 & m != 0 { X1 } else { ((k as u64 == a.0 & m) as u64, 0) };
+                *o = if a.1 & m != 0 {
+                    X1
+                } else {
+                    ((k as u64 == a.0 & m) as u64, 0)
+                };
             }
             return (n, false);
         }
@@ -242,7 +266,11 @@ pub fn eval_gate(nl: &Netlist, g: &Gate, val: &[u64], flag: &[u64], state: &mut 
             }
             out[0] = (state[s] & m, state[s + 1] & m);
             let top = if g.param == 0 { m } else { g.param - 1 };
-            out[1] = if state[s + 1] & m != 0 { X1 } else { ((state[s] & m == top) as u64, 0) };
+            out[1] = if state[s + 1] & m != 0 {
+                X1
+            } else {
+                ((state[s] & m == top) as u64, 0)
+            };
             return (2, false);
         }
         Op::ShiftReg => {
@@ -257,7 +285,11 @@ pub fn eval_gate(nl: &Netlist, g: &Gate, val: &[u64], flag: &[u64], state: &mut 
         Op::Rom | Op::Ram => {
             let a = iv(0);
             let mem = &mems[g.mem as usize];
-            out[0] = if a.1 & (mem.len() as u64 - 1) != 0 { (m, m) } else { (mem[(a.0 as usize) & (mem.len() - 1)] & m, 0) };
+            out[0] = if a.1 & (mem.len() as u64 - 1) != 0 {
+                (m, m)
+            } else {
+                (mem[(a.0 as usize) & (mem.len() - 1)] & m, 0)
+            };
         }
         Op::Pixels | Op::Terminal => return (0, false),
         Op::Input => out[0] = (state[s] & m, 0),
@@ -276,7 +308,14 @@ pub enum Pending {
 
 /// Samples the synchronous inputs of gate `gi` from the stable state.
 #[inline]
-pub fn sample(nl: &Netlist, gi: u32, val: &[u64], flag: &[u64], state: &[u64], mems: &[Vec<u64>]) -> Option<Pending> {
+pub fn sample(
+    nl: &Netlist,
+    gi: u32,
+    val: &[u64],
+    flag: &[u64],
+    state: &[u64],
+    mems: &[Vec<u64>],
+) -> Option<Pending> {
     let g = &nl.gates[gi as usize];
     let m = mask(g.width);
     let ins = &nl.ins[g.in_start as usize..g.in_start as usize + g.in_len as usize];
@@ -374,7 +413,10 @@ pub fn sample(nl: &Netlist, gi: u32, val: &[u64], flag: &[u64], state: &[u64], m
                 return st(d.0, d.1);
             }
             let sin = clean(iv(0), 1);
-            st(((state[s] << 1) | sin.0) & m, ((state[s + 1] << 1) | sin.1) & m)
+            st(
+                ((state[s] << 1) | sin.0) & m,
+                ((state[s + 1] << 1) | sin.1) & m,
+            )
         }
         Op::Ram => {
             let (a, we) = (iv(0), iv(2));

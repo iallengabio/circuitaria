@@ -11,3 +11,6 @@ circ-model.workspace = true
 [dev-dependencies]
 serde_json.workspace = true
 proptest = { version = "1", default-features = false, features = ["std"] }
+
+[lints]
+workspace = true

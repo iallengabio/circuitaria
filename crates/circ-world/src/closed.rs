@@ -8,10 +8,18 @@ const fn p(name: &'static str, width: u8) -> Port {
     Port { name, width }
 }
 fn lost(code: &'static str) -> Status {
-    Status::Lost { code, detail: String::new() }
+    Status::Lost {
+        code,
+        detail: String::new(),
+    }
 }
 fn scenarios(kind: &str, visible: usize, hidden: usize) -> Vec<Scenario> {
-    (0..visible + hidden).map(|k| Scenario { key: format!("{kind}.{}", k + 1), hidden: k >= visible }).collect()
+    (0..visible + hidden)
+        .map(|k| Scenario {
+            key: format!("{kind}.{}", k + 1),
+            hidden: k >= visible,
+        })
+        .collect()
 }
 
 // ---------- Elevator: 4 floors, motor up/down, floor sensor ----------
@@ -29,7 +37,16 @@ pub struct Elevator {
 
 impl Default for Elevator {
     fn default() -> Self {
-        let mut e = Elevator { pos: 0, floor: 0, calls: vec![], i: 0, wait: 0, steps: 0, motor: 0, status: Status::Running };
+        let mut e = Elevator {
+            pos: 0,
+            floor: 0,
+            calls: vec![],
+            i: 0,
+            wait: 0,
+            steps: 0,
+            motor: 0,
+            status: Status::Running,
+        };
         e.reset(0);
         e
     }
@@ -59,7 +76,9 @@ impl World for Elevator {
             }
             v
         };
-        (self.pos, self.floor, self.i, self.wait, self.steps, self.motor) = (0, 0, 0, 0, 0, 0);
+        (
+            self.pos, self.floor, self.i, self.wait, self.steps, self.motor,
+        ) = (0, 0, 0, 0, 0, 0);
         self.status = Status::Running;
     }
     fn step(&mut self, out: &[Sig], inp: &mut [u64]) {
@@ -119,7 +138,14 @@ impl World for Elevator {
             }
         }
         let y = 150 - self.pos * 4;
-        d.rect(136, y - 34, 48, 34, 4, if self.wait > 0 { GREEN } else { BLUE });
+        d.rect(
+            136,
+            y - 34,
+            48,
+            34,
+            4,
+            if self.wait > 0 { GREEN } else { BLUE },
+        );
         d.text(160, y - 9, 18, FG, "🧑");
         d.text(160, 22, 12, ON, ["▼", "■", "▲"][(self.motor + 1) as usize]);
     }
@@ -141,7 +167,14 @@ const TRACK: i32 = 240;
 
 impl Default for Line {
     fn default() -> Self {
-        let mut l = Line { progress: 0, off: 0, curves: vec![], steps: 0, motors: (false, false), status: Status::Running };
+        let mut l = Line {
+            progress: 0,
+            off: 0,
+            curves: vec![],
+            steps: 0,
+            motors: (false, false),
+            status: Status::Running,
+        };
         l.reset(0);
         l
     }
@@ -165,7 +198,11 @@ impl World for Line {
     }
     fn reset(&mut self, scenario: usize) {
         let mut r = Rng::new(scenario as u64 + 7);
-        self.curves = if scenario == 0 { vec![0, 1, 1, 0, -1, -1, 0, 1, 0, -1, 1, 0] } else { (0..12).map(|_| r.below(3) as i32 - 1).collect() };
+        self.curves = if scenario == 0 {
+            vec![0, 1, 1, 0, -1, -1, 0, 1, 0, -1, 1, 0]
+        } else {
+            (0..12).map(|_| r.below(3) as i32 - 1).collect()
+        };
         (self.progress, self.off, self.steps, self.motors) = (0, 0, 0, (false, false));
         self.status = Status::Running;
     }
@@ -219,7 +256,14 @@ impl World for Line {
             d.line(x, py, nx, py - 24, 6, "#22263a");
             (x, py) = (nx, py - 24);
         }
-        d.line(160 + self.off * 12, 140, 160 + self.off * 12, 180, 6, "#22263a");
+        d.line(
+            160 + self.off * 12,
+            140,
+            160 + self.off * 12,
+            180,
+            6,
+            "#22263a",
+        );
         d.rect(138, 128, 44, 40, 8, BLUE);
         d.lamp(148, 132, 4, RED, self.off < 0);
         d.lamp(172, 132, 4, RED, self.off > 0);
@@ -234,7 +278,15 @@ impl World for Line {
 
 // ---------- Maze: a ROM-programmed robot ----------
 
-const MAZE: [&str; 7] = ["#########", "#...#...#", "###.#.#.#", "#...#.#.#", "#.###.#.#", "#.....#G#", "#########"];
+const MAZE: [&str; 7] = [
+    "#########",
+    "#...#...#",
+    "###.#.#.#",
+    "#...#.#.#",
+    "#.###.#.#",
+    "#.....#G#",
+    "#########",
+];
 const DIRS: [(i32, i32); 4] = [(1, 0), (0, 1), (-1, 0), (0, -1)];
 
 pub struct Maze {
@@ -248,7 +300,14 @@ pub struct Maze {
 
 impl Default for Maze {
     fn default() -> Self {
-        Maze { x: 1, y: 1, dir: 0, steps: 0, moves: 0, status: Status::Running }
+        Maze {
+            x: 1,
+            y: 1,
+            dir: 0,
+            steps: 0,
+            moves: 0,
+            status: Status::Running,
+        }
     }
 }
 

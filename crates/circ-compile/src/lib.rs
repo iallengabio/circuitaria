@@ -75,7 +75,17 @@ impl Op {
     pub fn has_state(self) -> bool {
         matches!(
             self,
-            Op::LatchSr | Op::LatchD | Op::Dff | Op::Tff | Op::Jkff | Op::Register | Op::Counter | Op::ShiftReg | Op::Input | Op::Clock | Op::Terminal
+            Op::LatchSr
+                | Op::LatchD
+                | Op::Dff
+                | Op::Tff
+                | Op::Jkff
+                | Op::Register
+                | Op::Counter
+                | Op::ShiftReg
+                | Op::Input
+                | Op::Clock
+                | Op::Terminal
         )
     }
 }
@@ -152,13 +162,20 @@ impl Netlist {
     }
 
     pub fn debug_comp(&self, path: &str, id: Id) -> Option<&DebugComp> {
-        self.debug.binary_search_by(|d| (self.paths[d.path as usize].as_str(), d.id).cmp(&(path, id))).ok().map(|k| &self.debug[k])
+        self.debug
+            .binary_search_by(|d| (self.paths[d.path as usize].as_str(), d.id).cmp(&(path, id)))
+            .ok()
+            .map(|k| &self.debug[k])
     }
 
     /// Components directly inside the instance at `path`.
     pub fn debug_in<'a>(&'a self, path: &'a str) -> impl Iterator<Item = &'a DebugComp> + 'a {
-        let start = self.debug.partition_point(|d| self.paths[d.path as usize].as_str() < path);
-        self.debug[start..].iter().take_while(move |d| self.paths[d.path as usize] == path)
+        let start = self
+            .debug
+            .partition_point(|d| self.paths[d.path as usize].as_str() < path);
+        self.debug[start..]
+            .iter()
+            .take_while(move |d| self.paths[d.path as usize] == path)
     }
 
     pub fn pins_of(&self, d: &DebugComp) -> &[u32] {
@@ -176,14 +193,18 @@ impl Netlist {
     }
 
     pub fn gate_of(&self, path: &str, id: Id) -> Option<u32> {
-        self.debug_comp(path, id).map(|d| d.gate).filter(|g| *g != NONE)
+        self.debug_comp(path, id)
+            .map(|d| d.gate)
+            .filter(|g| *g != NONE)
     }
 }
 
 /// Pins of any component, resolving `ic` through the project.
 pub fn pins_for(p: &Project, c: &Component) -> Option<Vec<PinDesc>> {
     if c.kind == "ic" {
-        p.modules.get(catalog::ps(&c.params, "module", "")).map(catalog::module_pins)
+        p.modules
+            .get(catalog::ps(&c.params, "module", ""))
+            .map(catalog::module_pins)
     } else {
         catalog::pins(&c.kind, &c.params)
     }
@@ -223,9 +244,22 @@ impl<'a> Cx<'a> {
             self.uf[a.max(b) as usize] = a.min(b);
         }
     }
-    fn diag(&mut self, level: &'static str, code: &'static str, path: &str, comp: Id, detail: String) {
+    fn diag(
+        &mut self,
+        level: &'static str,
+        code: &'static str,
+        path: &str,
+        comp: Id,
+        detail: String,
+    ) {
         if self.diags.len() < 200 {
-            self.diags.push(Diag { level, code, path: path.into(), comp, detail });
+            self.diags.push(Diag {
+                level,
+                code,
+                path: path.into(),
+                comp,
+                detail,
+            });
         }
     }
 
@@ -271,7 +305,9 @@ impl<'a> Cx<'a> {
                         let inner = self.inst(child, format!("{path}{}/", c.id), stack);
                         stack.pop();
                         for (pd, node) in &pn {
-                            if let Some(n) = pd.name[1..].parse::<Id>().ok().and_then(|k| inner.get(&k)) {
+                            if let Some(n) =
+                                pd.name[1..].parse::<Id>().ok().and_then(|k| inner.get(&k))
+                            {
                                 self.union(*node, *n);
                             }
                         }
@@ -292,7 +328,12 @@ impl<'a> Cx<'a> {
                 _ => {}
             }
             local.insert(c.id, self.flat.len());
-            self.flat.push(Fc { path: pidx, comp: c, pins: pn, root: path.is_empty() });
+            self.flat.push(Fc {
+                path: pidx,
+                comp: c,
+                pins: pn,
+                root: path.is_empty(),
+            });
         }
         for w in &m.wires {
             let mut ends = [NONE; 2];
@@ -304,7 +345,13 @@ impl<'a> Cx<'a> {
                 }
             }
             if ends[0] == NONE || ends[1] == NONE {
-                self.diag("warn", "dangling_wire", &path, w.a.c, format!("wire {}", w.id));
+                self.diag(
+                    "warn",
+                    "dangling_wire",
+                    &path,
+                    w.a.c,
+                    format!("wire {}", w.id),
+                );
             } else {
                 self.union(ends[0], ends[1]);
             }
@@ -363,7 +410,13 @@ fn op_of(kind: &str, root: bool) -> Option<Op> {
 }
 
 pub fn compile(p: &Project) -> Netlist {
-    let mut cx = Cx { p, uf: vec![], flat: vec![], diags: vec![], paths: vec![] };
+    let mut cx = Cx {
+        p,
+        uf: vec![],
+        flat: vec![],
+        diags: vec![],
+        paths: vec![],
+    };
     let mut stack = vec![p.main.as_str()];
     cx.inst(&p.main, String::new(), &mut stack);
 
@@ -427,18 +480,33 @@ pub fn compile(p: &Project) -> Netlist {
         let net = |k: usize| net_of[fc.pins[k].1 as usize];
         match kind {
             "pull" => {
-                pull[net(0) as usize] = if catalog::pb(&c.params, "up", true) { 1 } else { 2 };
+                pull[net(0) as usize] = if catalog::pb(&c.params, "up", true) {
+                    1
+                } else {
+                    2
+                };
                 continue;
             }
             "port_out" if fc.root => {
-                nl.ports_out.insert(catalog::ps(&c.params, "name", "").to_string(), net(0));
+                nl.ports_out
+                    .insert(catalog::ps(&c.params, "name", "").to_string(), net(0));
                 continue;
             }
             _ => {}
         }
-        let Some(op) = op_of(kind, fc.root) else { continue };
+        let Some(op) = op_of(kind, fc.root) else {
+            continue;
+        };
         let w = catalog::width(&c.params);
-        let mut t = Tmp { op, width: w, param: 0, ins: vec![], outs: vec![], state_init: 0, mem: None };
+        let mut t = Tmp {
+            op,
+            width: w,
+            param: 0,
+            ins: vec![],
+            outs: vec![],
+            state_init: 0,
+            mem: None,
+        };
         let mut defs = vec![];
         for (pd, node) in &fc.pins {
             match pd.dir {
@@ -465,7 +533,10 @@ pub fn compile(p: &Project) -> Netlist {
             "button" => t.width = 1,
             "number_in" => t.state_init = catalog::pu(&c.params, "value", 0),
             "port_in" => {
-                nl.ports_in.insert(catalog::ps(&c.params, "name", "").to_string(), tmp.len() as u32);
+                nl.ports_in.insert(
+                    catalog::ps(&c.params, "name", "").to_string(),
+                    tmp.len() as u32,
+                );
             }
             "rom" | "ram" => {
                 let n = 1usize << catalog::pu(&c.params, "addrBits", 4).clamp(1, 16);
@@ -493,8 +564,19 @@ pub fn compile(p: &Project) -> Netlist {
         if drivers[n].len() <= 1 && pull[n] == 0 {
             continue;
         }
-        if drivers[n].len() > 1 && drivers[n].iter().any(|(g, _)| tmp[*g as usize].op != Op::Tri) && diags.len() < 200 {
-            diags.push(Diag { level: "warn", code: "multi_driver", path: String::new(), comp: 0, detail: format!("net {n}") });
+        if drivers[n].len() > 1
+            && drivers[n]
+                .iter()
+                .any(|(g, _)| tmp[*g as usize].op != Op::Tri)
+            && diags.len() < 200
+        {
+            diags.push(Diag {
+                level: "warn",
+                code: "multi_driver",
+                path: String::new(),
+                comp: 0,
+                detail: format!("net {n}"),
+            });
         }
         let mut ins = vec![];
         for &(g, k) in &drivers[n] {
@@ -503,10 +585,20 @@ pub fn compile(p: &Project) -> Netlist {
             tmp[g as usize].outs[k as usize] = private;
             ins.push(private);
         }
-        tmp.push(Tmp { op: Op::Resolve, width: net_width[n], param: pull[n] as u64, ins, outs: vec![n as u32], state_init: 0, mem: None });
+        tmp.push(Tmp {
+            op: Op::Resolve,
+            width: net_width[n],
+            param: pull[n] as u64,
+            ins,
+            outs: vec![n as u32],
+            state_init: 0,
+            mem: None,
+        });
         in_defaults.push(vec![]);
     }
-    let driven = |n: usize, drivers: &Vec<Vec<(u32, u16)>>| n >= nets0 || !drivers[n].is_empty() || pull[n] != 0;
+    let driven = |n: usize, drivers: &Vec<Vec<(u32, u16)>>| {
+        n >= nets0 || !drivers[n].is_empty() || pull[n] != 0
+    };
 
     // Unconnected control pins fall back to their default constant.
     let mut consts: BTreeMap<(u8, u8), u32> = BTreeMap::new();
@@ -514,7 +606,9 @@ pub fn compile(p: &Project) -> Netlist {
     for g in 0..user_gates {
         for k in 0..tmp[g].ins.len() {
             let n = tmp[g].ins[k] as usize;
-            let Some(&(Some(d), w)) = in_defaults[g].get(k) else { continue };
+            let Some(&(Some(d), w)) = in_defaults[g].get(k) else {
+                continue;
+            };
             if driven(n, &drivers) {
                 continue;
             }
@@ -526,7 +620,15 @@ pub fn compile(p: &Project) -> Netlist {
         }
     }
     for ((d, w), n) in &consts {
-        tmp.push(Tmp { op: Op::Const, width: *w, param: *d as u64, ins: vec![], outs: vec![*n], state_init: 0, mem: None });
+        tmp.push(Tmp {
+            op: Op::Const,
+            width: *w,
+            param: *d as u64,
+            ins: vec![],
+            outs: vec![*n],
+            state_init: 0,
+            mem: None,
+        });
     }
     let nnets = net_width.len();
     let mut has_driver = vec![false; nnets];
@@ -535,14 +637,23 @@ pub fn compile(p: &Project) -> Netlist {
             has_driver[*n as usize] = true;
         }
     }
-    nl.floating = (0..nnets as u32).filter(|n| !has_driver[*n as usize]).collect();
+    nl.floating = (0..nnets as u32)
+        .filter(|n| !has_driver[*n as usize])
+        .collect();
 
     // Combinational fanout (pre-sort indices) for SCC + levels.
     let ng = tmp.len();
-    let (fan_start, fan) = csr(nnets, tmp.iter().enumerate().flat_map(|(g, t)| {
-        let op = t.op;
-        t.ins.iter().enumerate().filter(move |(k, _)| op.comb_input(*k)).map(move |(_, n)| (*n, g as u32))
-    }));
+    let (fan_start, fan) = csr(
+        nnets,
+        tmp.iter().enumerate().flat_map(|(g, t)| {
+            let op = t.op;
+            t.ins
+                .iter()
+                .enumerate()
+                .filter(move |(k, _)| op.comb_input(*k))
+                .map(move |(_, n)| (*n, g as u32))
+        }),
+    );
     let succ = |n: u32| &fan[fan_start[n as usize] as usize..fan_start[n as usize + 1] as usize];
 
     // Iterative Tarjan. SCC ids come out in reverse topological order.
@@ -684,25 +795,51 @@ pub fn compile(p: &Project) -> Netlist {
         nl.ins.extend(&t.ins);
         nl.outs.extend(&t.outs);
     }
-    let (fs, f) = csr(nnets, nl.gates.iter().enumerate().flat_map(|(g, gate)| {
-        let ins = &nl.ins[gate.in_start as usize..gate.in_start as usize + gate.in_len as usize];
-        let op = gate.op;
-        ins.iter().enumerate().filter(move |(k, _)| op.comb_input(*k)).map(move |(_, n)| (*n, g as u32))
-    }));
-    let (cs, cf) = csr(nnets, nl.gates.iter().enumerate().filter_map(|(g, gate)| {
-        gate.op.clk_index().map(|k| (nl.ins[gate.in_start as usize + k], g as u32))
-    }));
+    let (fs, f) = csr(
+        nnets,
+        nl.gates.iter().enumerate().flat_map(|(g, gate)| {
+            let ins =
+                &nl.ins[gate.in_start as usize..gate.in_start as usize + gate.in_len as usize];
+            let op = gate.op;
+            ins.iter()
+                .enumerate()
+                .filter(move |(k, _)| op.comb_input(*k))
+                .map(move |(_, n)| (*n, g as u32))
+        }),
+    );
+    let (cs, cf) = csr(
+        nnets,
+        nl.gates.iter().enumerate().filter_map(|(g, gate)| {
+            gate.op
+                .clk_index()
+                .map(|k| (nl.ins[gate.in_start as usize + k], g as u32))
+        }),
+    );
     (nl.fan_start, nl.fan, nl.clk_start, nl.clk_fan) = (fs, f, cs, cf);
 
     // Debug info, sorted by (path, id).
     let mut dbg: Vec<usize> = (0..flat.len()).collect();
-    dbg.sort_by(|a, b| (paths[flat[*a].path as usize].as_str(), flat[*a].comp.id).cmp(&(paths[flat[*b].path as usize].as_str(), flat[*b].comp.id)));
+    dbg.sort_by(|a, b| {
+        (paths[flat[*a].path as usize].as_str(), flat[*a].comp.id)
+            .cmp(&(paths[flat[*b].path as usize].as_str(), flat[*b].comp.id))
+    });
     for fi in dbg {
         let fc = &flat[fi];
         let pin_start = nl.debug_nets.len() as u32;
-        nl.debug_nets.extend(fc.pins.iter().map(|(_, n)| net_of[*n as usize]));
-        let gate = if fc_gate[fi] == NONE { NONE } else { new_idx[fc_gate[fi] as usize] };
-        nl.debug.push(DebugComp { path: fc.path, id: fc.comp.id, gate, pin_start, pin_len: fc.pins.len() as u32 });
+        nl.debug_nets
+            .extend(fc.pins.iter().map(|(_, n)| net_of[*n as usize]));
+        let gate = if fc_gate[fi] == NONE {
+            NONE
+        } else {
+            new_idx[fc_gate[fi] as usize]
+        };
+        nl.debug.push(DebugComp {
+            path: fc.path,
+            id: fc.comp.id,
+            gate,
+            pin_start,
+            pin_len: fc.pins.len() as u32,
+        });
     }
     for g in nl.ports_in.values_mut() {
         *g = new_idx[*g as usize];
