@@ -1,0 +1,17 @@
+[package]
+name = "circ-challenges"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+circ-model.workspace = true
+circ-compile.workspace = true
+circ-engine.workspace = true
+circ-world.workspace = true
+circ-examples.workspace = true
+
+[features]
+solutions = []

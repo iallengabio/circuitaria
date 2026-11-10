@@ -1,0 +1,139 @@
+{
+  "worlds": [
+    { "id": "w1", "icon": "🚪", "title": { "pt": "Portas", "en": "Gates" } },
+    { "id": "w2", "icon": "🧮", "title": { "pt": "Combinacionais", "en": "Combinational" } },
+    { "id": "w3", "icon": "🧠", "title": { "pt": "Memória", "en": "Memory" } },
+    { "id": "w4", "icon": "🚦", "title": { "pt": "Máquinas de estados", "en": "State machines" } },
+    { "id": "w5", "icon": "🤖", "title": { "pt": "Processadores", "en": "Processors" } }
+  ],
+  "challenges": [
+    {
+      "id": "w1-l01-lampada", "world": "w1", "kind": "lamp",
+      "title": { "pt": "A Lâmpada Preguiçosa", "en": "The Lazy Lamp" },
+      "story": { "pt": "Esta lâmpada é do contra: ela só quer acender quando o interruptor está DESLIGADO. Ligue as coisas para que isso aconteça.", "en": "This lamp is contrary: it only wants to light up when the switch is OFF. Wire things up to make that happen." },
+      "concept": { "pt": "Porta NOT", "en": "NOT gate" },
+      "allowed": ["not"], "par": [2, 1], "unlocks": [],
+      "hints": { "pt": ["Você precisa inverter o sinal do interruptor.", "Arraste uma porta NOT, ligue o interruptor na entrada e a saída na lâmpada."], "en": ["You need to invert the switch signal.", "Drag a NOT gate, wire the switch to its input and its output to the lamp."] }
+    },
+    {
+      "id": "w1-l02-cofre", "world": "w1", "kind": "vault",
+      "title": { "pt": "O Cofre do Capitão", "en": "The Captain's Vault" },
+      "story": { "pt": "O cofre do pirata só abre com a combinação certa dos 4 botões: 1 apertado, 2 solto, 3 apertado, 4 apertado. Qualquer outra combinação deve mantê-lo trancado.", "en": "The pirate's vault only opens with the right combination of its 4 buttons: 1 pressed, 2 released, 3 pressed, 4 pressed. Anything else must keep it locked." },
+      "concept": { "pt": "AND e NOT", "en": "AND and NOT" },
+      "allowed": ["not", "and"], "par": [4, 2], "unlocks": [],
+      "hints": { "pt": ["A porta AND só liga quando TODAS as entradas estão ligadas.", "Selecione a porta AND e aumente o número de entradas para 4 no inspetor. O botão 2 precisa passar por um NOT."], "en": ["An AND gate turns on only when ALL inputs are on.", "Select the AND gate and raise its input count to 4 in the inspector. Button 2 must go through a NOT."] }
+    },
+    {
+      "id": "w1-l03-porta", "world": "w1", "kind": "door",
+      "title": { "pt": "Porta de Duas Chaves", "en": "The Two-Key Door" },
+      "story": { "pt": "A porta do tesouro abre quando os DOIS guardas giram suas chaves ao mesmo tempo — ou quando alguém usa a chave-mestra.", "en": "The treasury door opens when BOTH guards turn their keys at once — or when someone uses the master key." },
+      "concept": { "pt": "AND e OR", "en": "AND and OR" },
+      "allowed": ["not", "and", "or"], "par": [3, 2], "unlocks": [],
+      "hints": { "pt": ["São duas maneiras de abrir: uma OU outra.", "(guardaA AND guardaB) OR mestre."], "en": ["There are two ways to open it: one OR the other.", "(guardaA AND guardaB) OR mestre."] }
+    },
+    {
+      "id": "w1-l04-alarme-museu", "world": "w1", "kind": "museum",
+      "title": { "pt": "O Alarme do Museu", "en": "The Museum Alarm" },
+      "story": { "pt": "Três lasers cruzam a sala. Cada sensor manda 1 enquanto recebe seu feixe. Se alguém cortar qualquer feixe, a sirene toca — a menos que a chave do guarda esteja ligada.", "en": "Three lasers cross the room. Each sensor sends 1 while it sees its beam. If anyone cuts any beam the siren sounds — unless the guard's key is on." },
+      "concept": { "pt": "NAND, NOR e sensores", "en": "NAND, NOR and sensors" },
+      "allowed": ["not", "and", "or", "nand", "nor"], "par": [4, 2], "unlocks": [],
+      "hints": { "pt": ["Primeiro descubra: 'algum feixe foi cortado' é o contrário de 'todos os feixes estão chegando'.", "Um AND de 3 entradas diz se está tudo bem. Um NOR entre ele e a chave resolve o resto."], "en": ["First notice: 'some beam was cut' is the opposite of 'all beams arrive'.", "A 3-input AND tells you all is well. A NOR between it and the key does the rest."] }
+    },
+    {
+      "id": "w2-l05-votacao", "world": "w2", "kind": "council",
+      "title": { "pt": "Votação do Conselho", "en": "The Council Vote" },
+      "story": { "pt": "O conselho tem três membros. Uma proposta é aprovada quando a maioria vota a favor.", "en": "The council has three members. A proposal passes when the majority votes in favour." },
+      "concept": { "pt": "Lógica de maioria", "en": "Majority logic" },
+      "allowed": ["not", "and", "or", "nand", "nor", "xor", "xnor"], "par": [6, 4], "unlocks": [],
+      "hints": { "pt": ["Maioria de três = pelo menos dois concordam.", "Teste cada par com um AND e junte os três pares com um OR."], "en": ["A majority of three = at least two agree.", "Test each pair with an AND and join the three pairs with an OR."] }
+    },
+    {
+      "id": "w2-l06-mercadinho", "world": "w2", "kind": "market",
+      "title": { "pt": "Calculadora do Mercadinho", "en": "The Corner Shop Calculator" },
+      "story": { "pt": "Seu Zé quer somar o preço de dois produtos (de 0 a 15) e mostrar o total no visor. Construa o somador! Dica de ouro: monte um somador de 1 bit, transforme-o em CI e reutilize.", "en": "Mr. Zé wants to add the prices of two products (0 to 15) and show the total. Build the adder! Golden tip: build a 1-bit adder, turn it into an IC and reuse it." },
+      "concept": { "pt": "Somadores, barramentos e CIs", "en": "Adders, buses and ICs" },
+      "allowed": ["not", "and", "or", "nand", "nor", "xor", "xnor"], "par": [24, 17], "unlocks": ["adder"],
+      "hints": { "pt": ["Use um Divisor para separar os 4 bits de cada preço e um Juntor de 5 bits para montar o total.", "Somador completo: soma = a XOR b XOR vem-um; vai-um = (a AND b) OR (vem-um AND (a XOR b)). Selecione-o e clique em Criar CI."], "en": ["Use a Splitter to separate the 4 bits of each price and a 5-bit Merger to build the total.", "Full adder: sum = a XOR b XOR carry-in; carry-out = (a AND b) OR (carry-in AND (a XOR b)). Select it and click Create IC."] }
+    },
+    {
+      "id": "w3-l07-cadeado", "world": "w3", "kind": "lock",
+      "title": { "pt": "O Cadeado que Lembra", "en": "The Lock that Remembers" },
+      "story": { "pt": "Um único botão: aperta, tranca. Aperta de novo, destranca. O circuito precisa LEMBRAR em que estado está.", "en": "A single button: press to lock, press again to unlock. The circuit must REMEMBER which state it is in." },
+      "concept": { "pt": "Flip-flops", "en": "Flip-flops" },
+      "allowed": ["not", "and", "or", "nand", "nor", "xor", "xnor", "latch_sr", "latch_d", "dff", "tff", "jkff"], "par": [3, 1], "unlocks": ["tff"],
+      "hints": { "pt": ["Portas sozinhas não lembram de nada. Olhe a categoria Memória.", "Um flip-flop T inverte a saída a cada subida do relógio. O botão pode ser o relógio!"], "en": ["Gates alone remember nothing. Look at the Memory category.", "A T flip-flop inverts its output on each rising clock edge. The button can be the clock!"] }
+    },
+    {
+      "id": "w3-l08-torre-laser", "world": "w3", "kind": "turret",
+      "title": { "pt": "Torre Laser", "en": "Laser Turret" },
+      "story": { "pt": "Naves invasoras passam pelo sensor uma de cada vez. Os dois canhões precisam se revezar para não superaquecer: o esquerdo atira na primeira nave, o direito na segunda, e assim por diante — e só enquanto houver nave na mira.", "en": "Invading ships cross the sensor one at a time. The two cannons must take turns so they don't overheat: left fires at the first ship, right at the second, and so on — and only while a ship is in sight." },
+      "concept": { "pt": "Sequencial + atuadores", "en": "Sequential + actuators" },
+      "allowed": ["not", "and", "or", "nand", "nor", "xor", "xnor", "latch_sr", "latch_d", "dff", "tff", "jkff"], "par": [5, 3], "unlocks": [],
+      "hints": { "pt": ["Você precisa lembrar de quem é a vez. Isso muda a cada nave que chega.", "Um flip-flop T com o sensor no relógio alterna a vez. Combine Q e Q̄ com o sensor usando portas AND."], "en": ["You must remember whose turn it is. That flips with each arriving ship.", "A T flip-flop clocked by the sensor alternates turns. Combine Q and Q̄ with the sensor using AND gates."] }
+    },
+    {
+      "id": "w3-l09-fabrica", "world": "w3", "kind": "factory",
+      "title": { "pt": "Fábrica de Caixas", "en": "The Box Factory" },
+      "story": { "pt": "Cada caixa que passa pisca o sensor. Mostre a contagem no visor e pare a esteira quando chegar a 10. Quando o operador apertar ZERAR, comece tudo de novo.", "en": "Each passing box blinks the sensor. Show the count on the display and stop the belt at 10. When the operator presses RESET, start over." },
+      "concept": { "pt": "Contadores e comparação", "en": "Counters and comparison" },
+      "allowed": ["not", "and", "or", "nand", "nor", "xor", "xnor", "latch_sr", "latch_d", "dff", "tff", "jkff", "adder", "counter", "cmp", "register"], "par": [4, 2], "unlocks": ["counter"],
+      "hints": { "pt": ["O sensor pode ser o relógio de um contador de 4 bits.", "Um comparador entre a contagem e a constante 10 diz a hora de parar. ZERAR vai na entrada clr do contador."], "en": ["The sensor can clock a 4-bit counter.", "A comparator between the count and the constant 10 tells you when to stop. RESET goes to the counter's clr input."] }
+    },
+    {
+      "id": "w4-l10-semaforo", "world": "w4", "kind": "traffic",
+      "title": { "pt": "Semáforo da Esquina", "en": "The Corner Traffic Light" },
+      "story": { "pt": "A cada pulso do relógio o semáforo avança: 4 tempos no verde, 1 no amarelo e 3 no vermelho — e então recomeça. O sinal de pedestres acende junto com o vermelho. Só uma luz dos carros acesa por vez!", "en": "On every clock pulse the light advances: 4 beats green, 1 yellow and 3 red — then it starts over. The pedestrian sign lights together with red. Only one car light on at a time!" },
+      "concept": { "pt": "Máquina de estados + relógio", "en": "State machine + clock" },
+      "allowed": ["not", "and", "or", "nand", "nor", "xor", "xnor", "latch_sr", "latch_d", "dff", "tff", "jkff", "adder", "counter", "cmp", "register", "mux", "decoder"], "par": [9, 6], "unlocks": [],
+      "hints": { "pt": ["4 + 1 + 3 = 8 tempos: um contador de 3 bits dá exatamente 8 estados.", "Estados 0–3 (bit mais alto = 0) são verde; o estado 4 é amarelo; 5, 6 e 7 são vermelho."], "en": ["4 + 1 + 3 = 8 beats: a 3-bit counter gives exactly 8 states.", "States 0–3 (top bit = 0) are green; state 4 is yellow; 5, 6 and 7 are red."] }
+    },
+    {
+      "id": "w4-l11-refrigerante", "world": "w4", "kind": "vending",
+      "title": { "pt": "Máquina de Refrigerante", "en": "The Soda Machine" },
+      "story": { "pt": "O refrigerante custa 3. A máquina aceita moedas de 1 e de 2. Quando o valor chegar a 3 ou mais, libere a lata (e dê troco de 1 se pagaram 4). As saídas devem ficar acesas até a próxima moeda cair, e a conta recomeça do zero.", "en": "A soda costs 3. The machine takes coins of 1 and 2. When the amount reaches 3 or more, release the can (and give 1 back if they paid 4). The outputs must stay on until the next coin drops, and the tally restarts from zero." },
+      "concept": { "pt": "Máquina de estados finitos", "en": "Finite state machine" },
+      "allowed": ["not", "and", "or", "nand", "nor", "xor", "xnor", "latch_sr", "latch_d", "dff", "tff", "jkff", "adder", "counter", "cmp", "register", "mux", "decoder"], "par": [16, 12], "unlocks": [],
+      "hints": { "pt": ["Guarde o valor acumulado (0, 1 ou 2) em flip-flops; qualquer moeda serve de relógio.", "Some o acumulado com o valor da moeda. Se deu 3 ou 4, o próximo estado é 0 e 'liberar' é gravado em seu próprio flip-flop."], "en": ["Keep the running amount (0, 1 or 2) in flip-flops; any coin acts as the clock.", "Add the amount to the coin value. If it reaches 3 or 4, the next state is 0 and 'release' is stored in its own flip-flop."] }
+    },
+    {
+      "id": "w4-l12-elevador", "world": "w4", "kind": "elevator",
+      "title": { "pt": "Elevador do Prédio", "en": "The Building Elevator" },
+      "story": { "pt": "Quatro andares, um motor. O sensor informa o último andar por onde a cabine passou e o painel informa o andar chamado. Leve a cabine até lá e pare. Nunca ligue subir e descer ao mesmo tempo, e não bata no teto!", "en": "Four floors, one motor. The sensor reports the last floor the cabin passed and the panel reports the called floor. Take the cabin there and stop. Never drive up and down at once, and don't hit the roof!" },
+      "concept": { "pt": "Controle com sensores e motor", "en": "Control with sensors and a motor" },
+      "allowed": ["not", "and", "or", "nand", "nor", "xor", "xnor", "latch_sr", "latch_d", "dff", "tff", "jkff", "adder", "counter", "cmp", "register", "mux", "decoder"], "par": [3, 1], "unlocks": ["cmp"],
+      "hints": { "pt": ["Compare onde você está com onde quer chegar.", "Chamada maior que o andar: subir. Menor: descer. Igual: nada."], "en": ["Compare where you are with where you want to be.", "Call above the floor: up. Below: down. Equal: nothing."] }
+    },
+    {
+      "id": "w4-l13-seguidor", "world": "w4", "kind": "line",
+      "title": { "pt": "Robô Seguidor de Linha", "en": "Line-Following Robot" },
+      "story": { "pt": "O robô tem dois sensores, um de cada lado da linha preta, e dois motores. Quando um sensor enxerga a linha, o robô está saindo para o outro lado. Mantenha-o na pista até a chegada.", "en": "The robot has two sensors, one on each side of the black line, and two motors. When a sensor sees the line, the robot is drifting to the other side. Keep it on track to the finish." },
+      "concept": { "pt": "Controle reativo", "en": "Reactive control" },
+      "allowed": ["not", "and", "or", "nand", "nor", "xor", "xnor", "latch_sr", "latch_d", "dff", "tff", "jkff", "mux"], "par": [3, 2], "unlocks": [],
+      "hints": { "pt": ["Parar a roda de um lado faz o robô virar para esse lado.", "Se o sensor esquerdo vê a linha, pare o motor esquerdo. O mesmo para o direito."], "en": ["Stopping the wheel on one side turns the robot towards that side.", "If the left sensor sees the line, stop the left motor. Same for the right."] }
+    },
+    {
+      "id": "w4-l14-telegrafo", "world": "w4", "kind": "telegraph",
+      "title": { "pt": "Telégrafo a Laser", "en": "The Laser Telegraph" },
+      "story": { "pt": "Para mandar uma letra pelo laser é preciso enviá-la bit a bit. Quando ENVIAR estiver ligado numa subida do relógio, capture o byte; depois, a cada pulso, o laser deve mostrar o próximo bit — do mais alto para o mais baixo.", "en": "To send a letter over the laser you must send it bit by bit. When SEND is on at a rising clock edge, capture the byte; then, on each pulse, the laser must show the next bit — highest first." },
+      "concept": { "pt": "Registrador de deslocamento", "en": "Shift register" },
+      "allowed": ["not", "and", "or", "nand", "nor", "xor", "xnor", "latch_sr", "latch_d", "dff", "tff", "jkff", "adder", "counter", "cmp", "register", "mux", "decoder", "shiftreg"], "par": [4, 1], "unlocks": ["shiftreg"],
+      "hints": { "pt": ["Um registrador de deslocamento carrega 8 bits de uma vez e os empurra para fora um a um.", "dado → d, enviar → load, clk → clk. A saída sout é o bit mais alto: ligue-a ao laser."], "en": ["A shift register loads 8 bits at once and pushes them out one by one.", "dado → d, enviar → load, clk → clk. Output sout is the top bit: wire it to the laser."] }
+    },
+    {
+      "id": "w5-l15-simon", "world": "w5", "kind": "simon",
+      "title": { "pt": "Simon Diz", "en": "Simon Says" },
+      "story": { "pt": "O jogo mostra uma sequência de cores (um pulso em GRAVAR para cada cor). Depois de REINICIAR, seu circuito deve repeti-la: mostre a primeira cor e avance uma a cada pulso em TOCAR.", "en": "The game shows a colour sequence (one RECORD pulse per colour). After RESTART your circuit must replay it: show the first colour and advance one on each PLAY pulse." },
+      "concept": { "pt": "RAM, contador e endereços", "en": "RAM, counter and addresses" },
+      "allowed": ["not", "and", "or", "nand", "nor", "xor", "xnor", "latch_sr", "latch_d", "dff", "tff", "jkff", "adder", "counter", "cmp", "register", "mux", "decoder", "shiftreg", "ram", "rom"], "par": [5, 3], "unlocks": ["ram"],
+      "hints": { "pt": ["Uma RAM guarda cada cor num endereço; um contador escolhe o endereço.", "O contador avança com GRAVAR ou TOCAR (um OR) e zera com REINICIAR. A RAM grava (we) quando GRAVAR pulsa."], "en": ["A RAM stores each colour at an address; a counter picks the address.", "The counter advances on RECORD or PLAY (an OR) and clears on RESTART. The RAM writes (we) when RECORD pulses."] }
+    },
+    {
+      "id": "w5-l16-cerebro", "world": "w5", "kind": "maze",
+      "title": { "pt": "O Cérebro do Robô", "en": "The Robot's Brain" },
+      "story": { "pt": "Chefão final! Construa um mini-computador: um contador de programa e uma ROM com as instruções. A cada pulso do relógio o robô executa um comando: 0 = esperar, 1 = frente, 2 = virar à esquerda, 3 = virar à direita. Programe a rota até a bandeira.", "en": "Final boss! Build a tiny computer: a program counter and a ROM holding the instructions. On each clock pulse the robot runs one command: 0 = wait, 1 = forward, 2 = turn left, 3 = turn right. Program the route to the flag." },
+      "concept": { "pt": "Programa armazenado", "en": "Stored program" },
+      "allowed": ["not", "and", "or", "nand", "nor", "xor", "xnor", "latch_sr", "latch_d", "dff", "tff", "jkff", "adder", "counter", "cmp", "register", "mux", "decoder", "shiftreg", "ram", "rom"], "par": [4, 2], "unlocks": ["rom"],
+      "hints": { "pt": ["O contador é o 'dedo' que aponta a instrução atual; a ROM é a lista de instruções.", "Contador de 5 bits com clk no relógio; sua saída vai no endereço de uma ROM de 2 bits de largura. Edite os dados da ROM no inspetor: 1 1 3 1 1 3 ..."], "en": ["The counter is the 'finger' pointing at the current instruction; the ROM is the instruction list.", "A 5-bit counter clocked by clk; its output feeds the address of a 2-bit wide ROM. Edit the ROM data in the inspector: 1 1 3 1 1 3 ..."] }
+    }
+  ]
+}

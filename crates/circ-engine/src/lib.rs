@@ -414,6 +414,18 @@ impl Sim {
         self.tick = s.tick;
     }
 
+    /// Approximate heap bytes held by the runtime (netlist + state).
+    pub fn mem_bytes(&self) -> usize {
+        let nl = &self.nl;
+        let v = |len: usize, size: usize| len * size;
+        v(nl.net_width.len(), 1 + 8 + 8 + 1)
+            + v(nl.gates.len(), std::mem::size_of::<circ_compile::Gate>() + 4 + 1 + 1 + 1)
+            + v(nl.ins.len() + nl.outs.len() + nl.fan.len() + nl.clk_fan.len() + nl.fan_start.len() + nl.clk_start.len(), 4)
+            + v(self.state.len(), 8)
+            + self.mems.iter().map(|m| m.len() * 8).sum::<usize>()
+            + self.sched.queues.iter().map(|q| q.capacity() * 4 + 24).sum::<usize>()
+    }
+
     /// FNV-1a over the full observable state (determinism checks).
     pub fn hash(&self) -> u64 {
         let mut h = 0xcbf29ce484222325u64;
