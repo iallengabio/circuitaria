@@ -1,0 +1,56 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag da release (ex.: v1.0.0)
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+            apps/desktop/src-tauri
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm --filter desktop tauri build --bundles msi,nsis
+      - name: Collect installers
+        shell: bash
+        run: |
+          mkdir out
+          cp apps/desktop/src-tauri/target/release/bundle/msi/*.msi out/
+          cp apps/desktop/src-tauri/target/release/bundle/nsis/*-setup.exe out/
+          ls -l out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installers
+          path: out/*
+      - name: Upload to GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --draft --title "Circuitaria ${TAG#v}" --notes ""
+          gh release upload "$TAG" out/* --clobber

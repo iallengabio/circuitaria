@@ -33,7 +33,7 @@ dependencies = [
 
 [[package]]
 name = "circ-challenges"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "circ-compile",
  "circ-engine",
@@ -46,7 +46,7 @@ dependencies = [
 
 [[package]]
 name = "circ-cli"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "circ-challenges",
  "circ-compile",
@@ -58,7 +58,7 @@ dependencies = [
 
 [[package]]
 name = "circ-compile"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "circ-model",
  "serde",
@@ -67,7 +67,7 @@ dependencies = [
 
 [[package]]
 name = "circ-engine"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "circ-compile",
  "circ-model",
@@ -77,7 +77,7 @@ dependencies = [
 
 [[package]]
 name = "circ-examples"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "circ-compile",
  "circ-engine",
@@ -87,7 +87,7 @@ dependencies = [
 
 [[package]]
 name = "circ-model"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -95,7 +95,7 @@ dependencies = [
 
 [[package]]
 name = "circ-wasm"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "circ-challenges",
  "circ-compile",
@@ -107,7 +107,7 @@ dependencies = [
 
 [[package]]
 name = "circ-world"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "serde",
 ]

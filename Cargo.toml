@@ -5,7 +5,7 @@ exclude = ["apps/desktop/src-tauri"]
 
 [workspace.package]
 edition = "2021"
-version = "0.1.0"
+version = "1.0.0"
 publish = false
 
 [workspace.dependencies]
